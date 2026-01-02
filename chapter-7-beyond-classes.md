@@ -185,3 +185,53 @@ Notes:
 - Treat abstract, default, and non-static private methods as belonging to an instance of the interface.
 - Treat static methods and variables as belonging to the interface class object.
 - All private interface method types are only accessible within the interface declaration.
+
+## Working with Enums
+An enumeration, or enum for short, is like a fixed set of constants.
+Using an enum is much better than using a bunch of constants because it provides type-safe checking. 
+With numeric or String constants, you can pass an invalid value and not find out until runtime. 
+With enums, it is impossible to create an invalid enum value without introducing a compiler error.
+Enumerations show up whenever you have a set of items whose types are known at compile time.
+
+- Enum values are considered constants and are commonly written using snake_case.
+- Enums can be compared using `==` because they are like `static final` constants.
+- `equals()` or `==` both works when comparing enums, since each enum value is initialized only once in the Java Virtual Machine (JVM).
+- Enums cannot be extended by other enums or classes.
+- Because, the vale in an enum is fixed. More value cannot be added by extending the enum.
+- Enum themselves can implement interface.
+- Enum cannot be marked final (nor required to, they are implicity final).
+- Each enum value is created once when the enum is first loaded. Once the enum has been loaded, it retrieves the single enum value with the matching name.
+
+**Using Enums in switch Statements**
+enums can be used in switch statements and expressions. Enums have the unique property that they do not require a default branch for an exhaustive switch if all enum values are handled.
+A default branch can also be added but is not required, so long as all values are handled.
+
+Example,
+```java
+enum Season { SPRING, SUMMER, FALL, WINTER; }
+
+String getWeather(Season value) {
+   return switch (value) {
+      case SUMMER        -> "Too hot";
+      case Season.WINTER -> "Too cold";
+      case SPRING, FALL  -> "Just right";         
+   };
+}
+```
+
+**Creating Enum Variables**
+An enum declaration can include both static and instance variables.
+
+Although it is possible to create an enum with instance variables that can be modified, it is a very poor practice to do so since they are shared within the JVM. 
+When designing enum values, they should be immutable.
+
+**Declaring Enum Constructors**
+All enum constructors are implicitly private, with the modifier being optional.
+Enum cannot be extended, and enum constructors can be called only within the enum itself.
+
+**Writing Enum Methods**
+Enum can contain statice and instance methods.
+Enum can implement an interface and override the abstract method.
+The enum itself can contain an abstract method. This means that each and every enum value (enum instance) is required to implement this method.
+
+Just because an enum can have lots of methods doesn’t mean that it should. Try to keep your enums simple. If your enum is more than a screen length or two, it is probably too long, and you probably need a class instead.
