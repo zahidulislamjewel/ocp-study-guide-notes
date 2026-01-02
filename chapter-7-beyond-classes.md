@@ -103,11 +103,85 @@ public abstract interface Soar {
 ```
 
 **Conflicting Modifiers**
+- interface methods are public and abstract implicitly (inserted by compiler), so private or protected raise conflict
+- interface variables are public, static and final implicitly (inserted by compiler),  so private or protected raise conflict
 ```java
-// interface methods are public and abstract implicitly, so conflict
-// interface variables are public, static and final implicitly, so conflict
 public interface Dance {
-   private int count = 4;  // DOES NOT COMPILE
-   protected void step();  // DOES NOT COMPILE
+   private int count = 4;   // DOES NOT COMPILE
+   protected void step();   // DOES NOT COMPILE
+}
+``` 
+**Interfaces vs. Abstract Classes**
+Abstract classes and interfaces both are considered abstract types.
+Only interfaces make use of implicit modifiers.
+If access level not declared in classes (abstract or concreted), the access level is considered default package level
+If access level not declared in interfaces, the access level is considered public always
+Interfaces do not support protected members, as a class cannot extend an interface. 
+They also do not support package access members.
+
+```java
+abstract class Husky {      // abstract modifier required
+    abstract void play();   // abstract modifier required
+}
+ 
+interface Poodle {          // abstract modifier optional
+    void play();            // abstract modifier optional
+}
+
+public class Webby extends Husky {
+    // override declares the access modifier default, same as the parent.
+    void play() {}          // play() is declared with package access in Husky
+}
+ 
+public class Georgette implements Poodle {
+    // override reduces the access modifier on from public to package access.
+    void play() {}       // DOES NOT COMPILE - play() is public in Poodle
 }
 ```
+
+**Writing a `default` Interface Method**
+A default method is a method defined in an interface with the default keyword and includes a method body. 
+It may be optionally overridden by a class implementing the interface.
+
+One use of default methods is for backward compatibility. You can add a new default method to an interface without the need to modify all of the existing classes that implement the interface.
+Rules for declaring default methods:
+1. A default method may be declared only within an interface.
+2. A default method must be marked with the default keyword and include a method body.
+3. A default method is implicitly public.
+4. A default method cannot be marked abstract, final, or static.
+5. If a class inherits two or more default methods with the same method signature, then the class must override the method.
+
+**Inheriting Duplicate default Methods**
+If the class implementing the interfaces overrides the duplicate default method, the code compiles without issue, and the ambiguity problem is solved. By overriding the conflicting method, the ambiguity about which version of the method to call can be removed. 
+
+**Calling a default Method**
+A default method exists on any object inheriting the interface, not on the interface itself. 
+A default method should be treated like an inherited method that can be optionally overridden, rather than as a static method. 
+
+**Declaring static Interface Methods**
+Static Interface Method Definition Rules:
+1. A static method must be marked with the static keyword and include a method body.
+2. A static method without an access modifier is implicitly public.
+3. A static method cannot be marked abstract or final.
+4. A static method is not inherited and cannot be accessed in a class implementing the interface without a reference to the interface name.
+
+`private` access modifier can be used with static interface methods.
+
+**Private Interface Methods**
+Interface can have `private` and `private static` interface methods. 
+Because both types of methods are private, they can only be used in the interface declaration in which they are declared.
+Private methods exist to remove duplication inside default / static methods, not to be used by implementing classes.
+
+**Private Interface Method Definition Rules**
+1. A private interface method must be marked with the private modifier and include a method body.
+2. A private static interface method may be called by any method within the interface definition.
+3. A private interface method may only be called by default and other private non-static methods within the interface definition.
+
+A private interface method is only accessible to non-static methods defined within the interface.
+A private static interface method, on the other hand, can be accessed by any method in the interface. 
+For both types of private methods, a class inheriting the interface cannot directly invoke them.
+
+Notes:
+- Treat abstract, default, and non-static private methods as belonging to an instance of the interface.
+- Treat static methods and variables as belonging to the interface class object.
+- All private interface method types are only accessible within the interface declaration.
