@@ -387,3 +387,229 @@ If we remove `abstract` modifier and still want our switch expression to work, t
 3. Direct subclasses of sealed classes must be marked final, sealed, or non-sealed. For interfaces that extend a sealed interface, only sealed and non-sealed modifiers are permitted.
 4. The permits clause is optional if the sealed class and its direct subclasses are declared within the same file or the subclasses are nested within the sealed class.
 5. Interfaces can be sealed to limit the classes that implement them or the interfaces that extend them.
+
+
+## Encapsulating Data with Records
+
+A POJO, which stands for Plain Old Java Object, is a class used to model and pass data around, often with few or no complex methods.
+
+JavaBean is POJO that has some additional rules applied.
+
+Encapsulation is a way to protect class members by restricting access to them. In Java, it is commonly implemented by declaring all instance variables private. Callers are required to use methods to retrieve or modify instance variables.
+
+Encapsulation is about protecting a class from unexpected use. 
+
+The immutable objects pattern is an object-oriented design pattern in which an object cannot be modified after it is created. 
+Instead of modifying an immutable object, you create a new object that contains any properties from the original object you want copied over.
+setters must be omitted for a class to be immutable. 
+Example,
+```java
+public record Crane(int numberEggs, String name) {}
+
+// usage
+var mommy = new Crane(4, "Cammy");
+System.out.println(mommy.numberEggs());  // 4
+System.out.println(mommy.name());        // Cammy
+```
+
+`record` is a special type of data-oriented class in which the compiler inserts boilerplate code itself.
+
+**Members Automatically Added to Records**
+1. Constructor: A constructor with the parameters in the same order as the record declaration
+2. Accessor method: One accessor for each field
+3. equals(): A method to compare two elements that returns true if each field is equal in terms of equals()
+4. hashCode(): A consistent hashCode() method using all of the fields
+5. toString(): A toString() implementation that prints each field of the record in a convenient, easy-to-read format
+   
+The `println()` method always calls the `toString()` method automatically on any object passed to it.
+
+An empty but valid record example,
+```java
+public record Crane() {}
+```
+
+**Declaring Constructors**
+Record can have two types of constructor
+1. Long Constructor (traditional class constructor that compiler inserts automatically)
+2. Compact Constructor
+
+**The Long Constructor**
+The constructor the compiler normally inserts automatically, which is referred as the long constructor.
+The compiler will not insert a constructor if we define one with the same list of parameters in the same order. 
+Since each in record is field is final, the constructor must set every field.
+Example,
+```java
+public record Crane(int numberEggs, String name) {
+    public Crane(int numberEggs, String name) {
+        if (numberEggs < 0) throw new IllegalArgumentException();
+        this.numberEggs = numberEggs;
+        this.name = name;
+    }
+}
+```
+
+**Compact Constructors**
+A compact constructor is a special type of constructor used for records to process validation and transformations succinctly. 
+It takes no parameters and implicitly sets all fields. 
+A compact constructor is declared without parentheses.
+Java executes the full constructor after the compact constructor. 
+
+Example,
+```java
+public record Crane(int numberEggs, String name) {
+    public Crane {
+        if (numberEggs < 0) throw new IllegalArgumentException();
+        name = name.toUpperCase();  // refers to the input parameters, not instance members
+    }
+}
+```
+
+We cannot this reference inside the compact constructor, thus cannot assign and mutate the instace field.
+We can only access the input paratemeters and mutate them, before the compiler sets the instance fields with them using the compiler generated long constructor at the end of the compact constructor.
+
+**Transforming Parameters**
+Compact constructors give use the opportunity to apply transformations to any of the input values (not the instance fields, no `this` reference).
+While compact constructors can modify the constructor parameters, they cannot modify the fields of the record. 
+Example,
+```java
+public record Crane(int numberEggs, String name) {
+    public Crane {
+        this.numberEggs = 10;  // DOES NOT COMPILE
+    }
+}
+```
+Removing the `this` reference allows the code to compile, as the constructor parameter is modified instead.
+
+It is highly recommended to stick with the compact constructor form unless we have a good reason not to.
+
+**Overloaded Constructors**
+We can also create overloaded constructors that take a completely different list of parameters.
+They are more closely related to the long-form constructor and don’t use any of the syntactical features of compact constructors.
+The first line of an overloaded constructor must be an explicit call to another constructor via `this()`.
+If there are no other constructors, the long constructor must be called.
+Unlike compact constructors, we can only transform the data on the first line. 
+After the first line, all of the fields will already be assigned, and the object is immutable.
+So, modifying the variables after the first line will have no effect at all.
+Example,
+```java
+public record Crane(int numberEggs, String name) {
+    public Crane(String firstName, String lastName) {
+        this(0, firstName + " " + lastName);    // Using the compiler generated long constructor with this(int, String)
+        numberEggs = 10; // NO EFFECT (applies to parameter, not instance field)
+    }
+}
+```
+
+Only the long constructor, with fields that match the record declaration, supports setting field values with a this reference. Compact and overloaded constructors do not.
+Tha means, the overloaded default long constructor provided by compiler (exact same signature) supports setting value with `this(..)` referece.
+
+**Understanding Record Immutability**
+Records don’t have setters. Every field is inherently final and cannot be modified after it has been written in the constructor. 
+Just as interfaces are implicitly abstract, records are also implicitly final. The final modifier is optional but assumed.
+
+The following two declarations are equivalent,
+```java
+public record Crane(int numberEggs, String name) {}
+
+// is equivalent to
+public final record Crane(int numberEggs, String name) {}
+```
+
+Like enums, a record cannot be extended or inherited.
+Also like enums, a record can implement a regular or sealed interface, provided it implements all of the abstract methods.
+```java
+public interface Bird {}
+
+public record Crane(int numberEggs, String name) implements Bird {}
+```
+
+While instance members of a record are final, the static members are not required to be.
+
+**Using Pattern Matching with Records**
+Records have been updated to support pattern matching. 
+The new feature is really about the members of the record, rather than the record itself.
+Example,
+```java
+record Monkey(String name, int age) {}
+
+Object animal = new Monkey("George", 3);
+
+// Since Java 17
+if(animal instanceof Monkey m) {
+    // access m.name() and m.age() with the reference variable
+}
+
+// Since Java 21 (Unwraping or Unpacking)
+if(animal instanceof Monkey(String name, int age)) {
+    // access name and age directory without record reference
+}
+```
+
+**Pattern Matching Rules for Records**
+1. If any field declared in the record is included, then all fields must be included.
+2. The order of fields must be the same as in the record.
+3. The names of the fields do not have to match.
+4. At compile time, the type of the field must be compatible with the type declared in the record.
+5. The pattern may not match at runtime if the record supports elements of various types.
+
+We can name the record or its fields, but not both.
+Numeric promotion is not supported in record pattern matching. 
+
+**Matching Records**
+Pattern matching for records include matching both the type of the record and the type of each field.
+
+**Nesting Record Patterns**
+If a record includes other record values as members, then you can optionally pattern match the fields within the record. 
+Example,
+```java
+record Bear(String name, int age) {}
+record Couple(Bear a, Bear b) {}
+
+var c = new Couple(new Bear("Yogi", 3), new Bear("Fozzie", 2));
+
+if(c instanceof Couple(Bear a, Bear b)) {
+    // access a.name(), b.name()
+}
+
+if(c instanceof Couple(Bear a, Bear b)) {
+    // access a.name(), a.age(), b.name(), b.age()
+}
+
+if(c instanceof Couple(Bear a, Bear(String name, int age))) {
+    // access a.name(), a.age(), acess 2nd bear name and age directly
+}
+
+if(c instanceof Couple(Bear(String name, int age), Bear(String name, int age))) {
+    // DOES NOT COMPILE due to variable name ambiguity
+}
+
+if(c instanceof Couple(Bear(String name1, int age1), Bear(String name2, int age1))) {
+    // access name1, age1, name2, age2
+}
+
+if (c instanceof Couple(var a, var b)) {
+    // acess a.name(), a.age(), b.name(), b.age()
+}
+```
+
+**Matching Records with var and Generics**
+`var` keyword can be used in a pattern matching record.
+When `var` is used for one of the elements of the record, the compiler assumes the type to be the exact match for the type in the record.
+Pattern matching generics within records follow the similar rules for overloading generic methods.
+
+The diamond operator (`<>`) cannot be used for pattern matching (nor overloading generics).
+
+**Applying Pattern Matching Records to Switch**
+We can use switch with pattern matching and records. The rules are the same as classes, sealed-classes, enums etc.
+`default` clause is not required if all types are covered in the pattern matching expression.
+Example,
+```java
+record Snake(Object data) {}
+
+var x = switch(Snake snake) {
+    case Snake(Long hiss)       -> hiss + 1;
+    case Snake(Integer nagina)  -> nagina + 10;
+    case Snake(Number crowley)  -> crowley.intValue() + 10;
+    case Snake(Object other)    -> -1;
+};
+```
