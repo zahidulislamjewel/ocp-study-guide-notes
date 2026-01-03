@@ -235,3 +235,155 @@ Enum can implement an interface and override the abstract method.
 The enum itself can contain an abstract method. This means that each and every enum value (enum instance) is required to implement this method.
 
 Just because an enum can have lots of methods doesn’t mean that it should. Try to keep your enums simple. If your enum is more than a screen length or two, it is probably too long, and you probably need a class instead.
+
+## Sealing Classes
+A sealed class is a class that restricts which other classes may extend it.
+A class that limits the direct subclasses to a fixed set of classes.
+
+**Declaring a Sealed Class**
+
+Example,
+```java
+public sealed class Bear permits Kodiak, Panda {}
+
+public final class Kodiak extends Bear {}
+
+public non-sealed class Panda extends Bear {}
+```
+
+Sealed Class Keywords:
+- `sealed`: Indicates that a class or interface may only be extended/implemented by named classes or interfaces
+- `permits`: Used with the sealed keyword to list the classes and interfaces allowed
+- `non-sealed`: Applied to a class or interface that extends a sealed class, indicating that it can be extended by unspecified classes
+
+Another example,
+```java
+// concrete sealed class
+public class sealed Frog permits GlassFrog {}   // DOES NOT COMPILE, wrong order of keyword usage
+
+public final class GlassFrog extends Frog {}
+
+// abstract sealed class 
+public abstract sealed class Mammal permits Wolf {}
+
+public final class Wolf extends Mammal {}
+
+public final class Tiger extends Mammal {}      // DOES NOT COMPILE, final class cannot be extended
+```
+
+Sealed classes are commonly declared with the abstract modifier, although this is certainly not required.
+
+**Sealed class rules:**
+1. `sealed` class needs to be declared (and compiled) in the same package as its direct subclasses. And the subclasses must each extend the sealed class. 
+2. named modules allow sealed classes and their direct subclasses in different packages, provided they are in the same named module.
+3. Every class that directly extends a sealed class must specify exactly one of the following three modifiers: final, sealed, or non-sealed.
+
+**Creating `final` Subclasses**
+Example,
+```java
+public sealed class Antelope permits Gazelle {}
+ 
+public final class Gazelle extends Antelope {}
+ 
+public class DamaGazelle extends Gazelle {}  // DOES NOT COMPILE
+```
+
+**Creating `sealed` Subclasses**
+Example,
+```java
+public sealed class Fish permits ClownFish {}
+ 
+public sealed class ClownFish extends Fish permits OrangeClownFish {}
+ 
+public final class OrangeClownFish extends ClownFish {}
+```
+
+**Creating `non-sealed` Subclasses**
+Example,
+```java
+abstract sealed class Mammal permits Feline {}
+
+non-sealed class Feline extends Mammal {}
+
+class Tiger extends Feline {}
+
+class BengalTiger extends Tiger {}
+```
+
+**Omitting the `permits` Clause**
+To omit the `permits` clause, the declarations of the sealed class and it's direct subclasses must be in the same file.
+Example,
+```java
+// Snake.java
+public sealed class Snake {}    // permits <class list> are resolved to the direct subclasses
+
+final class Cobra extends Snake {}
+
+non-sealed class Python extends Snake {}
+```
+
+The `permits` clause can also be omitted if the subclasses are nested.
+Example,
+```java
+public sealed class Snake {
+    final class Cobra extends Snake {}
+}
+```
+But, if `permits` clause is used, then the nested subclass requires a reference to the `sealed` class namespace 
+Example,
+```java
+public sealed class Snake permits Cobra {   // DOES NOT COMPILE
+    final class Cobra extends Snake {}
+}
+
+public sealed class Snake permits Snake.Cobra { // Compiles fine
+    final class Cobra extends Snake {}
+}
+```
+
+So, if all the subclasses are nested, it is recommended to omit the `permits` clause.
+
+**Sealing Interfaces**
+`sealed` interface must appear in the same package or named module as the classes or interfaces that directly extend or implement it.
+One distinct feature of a sealed interface is that the `permits` list can apply to a class that implements the interface or an interface that extends the interface.
+Example,
+```java
+// Sealed interface
+public sealed interface Swims permits Duck, Swan, Floats {}
+ 
+// Classes permitted to implement sealed interface
+public final class Duck implements Swims {}
+public final class Swan implements Swims {}
+ 
+// Interface permitted to extend sealed interface
+public non-sealed interface Floats extends Swims {}
+```
+
+interfaces are implicitly abstract and cannot be marked final. For this reason, interfaces that extend a sealed interface can only be marked sealed or non-sealed. They cannot be marked final.
+
+**Applying Pattern Matching to a Sealed Class**
+`sealed` classes can be treated like an enum (exhaustive, no default clause) in a switch by applying pattern matching. 
+Example,
+```java
+abstract sealed class Fish permits Trout, Bass {}
+final class Trout extends Fish {}
+final class Bass extends Fish {}
+
+public String getType(Fish fish) {
+    return switch (fish) {
+        case Trout t -> "Trout!";
+        case Bass b -> "Bass!";
+    };
+}
+```
+
+The above code only works because Fish is `abstract` and `sealed`, and all possible subclasses are handled. If we remove the `abstract` modifier in the Fish declaration, then the switch expression would not compile.
+Like enums, make sure that if a switch uses a sealed class with pattern matching that all possible types are covered or a default clause is included.
+If we remove `abstract` modifier and still want our switch expression to work, then we would need to add the case for Fish class itself, at the end of the switch expression to make it exhaustive.
+
+**Sealed Class Rules**
+1. Sealed classes are declared with the sealed and permits modifiers.
+2. Sealed classes must be declared in the same package or named module as their direct subclasses.
+3. Direct subclasses of sealed classes must be marked final, sealed, or non-sealed. For interfaces that extend a sealed interface, only sealed and non-sealed modifiers are permitted.
+4. The permits clause is optional if the sealed class and its direct subclasses are declared within the same file or the subclasses are nested within the sealed class.
+5. Interfaces can be sealed to limit the classes that implement them or the interfaces that extend them.
