@@ -613,3 +613,132 @@ var x = switch(Snake snake) {
     case Snake(Object other)    -> -1;
 };
 ```
+
+**Customizing Records**
+Records actually support many of the same features as a class.
+Here are some of the members that records can include:
+- Overloaded and compact constructors
+- Instance methods including overriding any provided methods (accessors, equals(), hashCode(), toString())
+- Nested classes, interfaces, annotations, enums, and records
+
+Notes:
+We can add methods, static fields, and other data types. 
+We cannot add instance fields outside the record declaration, even if they are private and final. 
+Doing so defeats the purpose of using a record and could break immutability.
+Example,
+```java
+public record Crane(int numberEggs, String name) {
+    private static int TYPE = 10;               // Compiles fine, static ann static final field can be added
+    public int size;                            // DOES NOT COMPILE, adding new instance field prohibited
+    private final boolean friendly = true;      // DOES NOT COMPILE, adding new instance field prohibited even if they are final
+}
+```
+
+Records also do not support instance initializers. 
+All initialization for the fields of a record must happen in a constructor. 
+Records do support static initializers, though.
+Example,
+```java
+public record Crane(int numberEggs, String name) {
+    static { System.out.print("Hello Bird!"); } // Compiles fine, static initializer
+    { System.out.print("Goodbye Bird!"); }      // DOES NOT COMPILE, instance initializer
+    { this.name = "Big"; }                      // DOES NOT COMPILE, instance initializer
+}
+```
+
+**Creating Nested Classes**
+A nested class is a class that is defined within another class. 
+A nested class can come in one of four flavors, with all supporting instance and static variables as members.
+1. Inner class: A non-static type defined at the member level of a class
+2. Static nested class: A static type defined at the member level of a class
+3. Local class: A class defined within a method body
+4. Anonymous class: A special case of a local class that does not have a name
+
+
+**Benefits of Nested Classes**
+- Improved encapsulation: Helper classes can be hidden inside the enclosing class and restricted from external use.
+- Clear usage intent: Nesting shows the class is meant to be used in only one place.
+- Better organization: Closely related classes stay together, improving structure.
+- Cleaner, more readable code: When used properly, nesting reduces clutter and makes code easier to understand.
+
+When used improperly, though, nested classes can sometimes make the code harder to read.
+They also tend to tightly couple the enclosing and inner class.
+
+> Nested classes should be avoided if they need independent use, as they tightly couple with the enclosing class.
+
+Nested class also includes nested interfaces, enums, records and annotations.
+They are also called inner classes.
+
+**Declaring an Inner Class**
+An inner class, also called a member inner class, is a non-static type defined at the member level of a class (the same level as the methods, instance variables, and constructors).
+Because they are not top-level types, they can use any of the four access levels, not just public and package access.
+Inner classes have the following properties:
+- Can be declared public, protected, package, or private
+- Can extend a class and implement interfaces
+- Can be marked abstract or final
+- Can access members of the outer class, including private members
+
+**Referencing Members of an Inner Class**
+Outer class instance variables can be referenced from the inner class using the syntax `ClassName.this.variableName`
+Inner classes can be instantiated using the syntax `OuterClass.InnerClass reference = new OuterClass().new InnerClass();`
+
+**Creating a static Nested Class**
+A static nested class is a static type defined at the member level. 
+Unlike an inner class, a static nested class can be instantiated without an instance of the enclosing class. 
+The trade-off, though, is that it can’t access instance variables or methods declared in the outer class.
+
+Static Nested Class is like a top-level class except for the following:
+1. The nesting creates a namespace because the enclosing class name must be used to refer to it.
+2. It can additionally be marked private or protected.
+3. The enclosing class can refer to the fields and methods of the static nested class.
+
+Example,
+```java
+public class Park {
+    public static class Ride {
+        // Code
+    }
+}
+// Instantiating outside of the class
+Park.Ride ride = new Park.Ride();
+```
+
+**Nested Records are Implicitly static**
+Nested records are similar as static inner class. They can be instantiated in the same way as static inner class.
+
+**Writing a Local Class**
+A local class is a nested class defined within a method. 
+Like local variables, a local class declaration does not exist until the method is invoked, and it goes out of scope when the method returns.
+This means we can create instances only from within the method. 
+Those instances can still be returned from the method. 
+Local classes are not limited to being declared only inside methods. 
+They can be declared inside constructors and initializers. 
+
+Local classes have the following properties:
+- Do not have an access modifier.
+- Can be declared final or abstract.
+- Can include instance and static members.
+- Have access to all fields and methods of the enclosing class (when defined in an instance method).
+- Can access final and effectively final local variables.
+
+**Defining an Anonymous Class**
+An anonymous class is a specialized form of a local class that does not have a name. 
+It is declared and instantiated all in one statement using the new keyword, a type name with parentheses, and a set of braces {}. 
+Anonymous classes must extend an existing class or implement an existing interface.
+
+Interfaces require abstract methods to be public. 
+Anonymous class is just an unnamed local class.
+An anonymous class cannot both implement an interface and extend a class.
+An anonymous class can also be defined outside a method body. 
+An valid anonymous class defined in class level,
+```java
+public class Gorilla {
+    interface Climb {}
+    Climb climbing = new Climb() {};
+}
+```
+
+**Anonymous Classes and Lambda Expressions**
+Since the introduction of lambda expressions, anonymous classes are now often replaced with much shorter implementations.
+
+Anonymous class can access local variables of instance method, if the variables are final or effectively final (just like local class and lambda expression).
