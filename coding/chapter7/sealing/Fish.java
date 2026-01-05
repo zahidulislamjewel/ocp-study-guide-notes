@@ -1,10 +1,10 @@
 abstract sealed class Fish permits Trout, Bass {
     public static void main(String[] args) {
-        BigFish troutFish = new Trout();
+        Fish troutFish = new Trout();
         System.out.println(getType(troutFish));
     }
 
-    public static String getType(BigFish fish) {
+    public static String getType(Fish fish) {
         return switch (fish) {
             case Trout t -> "Trout!";
             case Bass b -> "Bass!";
@@ -13,8 +13,8 @@ abstract sealed class Fish permits Trout, Bass {
 
 }
 
-final class Trout extends BigFish {
+final class Trout extends Fish {
 }
 
-final class Bass extends BigFish {
+final class Bass extends Fish {
 }

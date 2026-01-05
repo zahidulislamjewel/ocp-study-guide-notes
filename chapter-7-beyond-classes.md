@@ -742,3 +742,136 @@ public class Gorilla {
 Since the introduction of lambda expressions, anonymous classes are now often replaced with much shorter implementations.
 
 Anonymous class can access local variables of instance method, if the variables are final or effectively final (just like local class and lambda expression).
+
+## Understanding Polymorphism
+Polymorphism the property of an object to take on many different forms. 
+To put this more precisely, a Java object may be accessed using the following:
+1. A reference with the same type as the object
+2. A reference that is a superclass of the object
+3. A reference of an interface the object implements or inherits
+4. Casting is not required if the object is being reassigned to a supertype or interface of the object. 
+
+Polymorphism enables an instance of Subclass to be reassigned or passed to a method using one of its supertypes i.e. a superclass or super interface.
+Once the object has been assigned to a new reference type, only the methods and variables available to that reference type are callable on the object without an explicit cast. 
+
+**Object vs. Reference**
+An object as the entity that exists in memory, allocated by the Java. Regardless of the type of the reference you have for the object in memory, the object itself doesn’t change.
+Example,
+```java
+class Primate {}
+
+interface HasTail {}
+
+public class Lemur extends Primate implements HasTail {}
+
+Lemur lemur = new Lemur();  
+HasTail hasTail = lemur;        // Lemur can be assigned to HasTail reference. Only HasTail methods are accessible
+Primate primate = lemur;        // Lemur can be assigned to Primate reference. Only Primate methods are accessible
+Object lemurObject = lemur;     // Lemur can be assigned to java.lang.Object reference. Only object methods are accessible
+Lemur lemur2 = (Lemur)primate;  // Explicit Cast to subtype
+Lemur lemur3 = primate;         // DOES NOT COMPILE (missing cast)
+```
+Even though the Lemur object has been assigned to a reference with a different type, the object itself has not changed and still exists as a Lemur object in memory. 
+What has changed, then, is our ability to access methods within the Lemur class with the lemurAsObject reference. Without an explicit cast back to Lemur, we no longer have access to the Lemur properties of the object.
+The same object exists in memory regardless of which reference is pointing to it.
+Depending on the type of the reference, we may only have access to certain methods.
+
+We can summarize this principle with the following two rules:
+1. The type of the object determines which properties exist within the object in memory.
+2. The type of the reference to the object determines which methods and variables are accessible to the Java program.
+
+**Using Interface References**
+When working with a group of objects that implement a common interface, it is considered a good coding practice to use an interface as the reference type.
+Using an interface as the reference type (instead of a concrete class) is good practice because it makes code flexible and implementation-independent. 
+The following method works with any `List` implementation (e.g., `ArrayList`) since it relies only on the interface’s behavior, not the underlying class.
+Exmaple,
+```java
+public void sortAndPrintZooAnimals(List<String> animals) {
+    Collections.sort(animals);
+    for(String a : animals) System.out.println(a);
+}
+var arrayList = new ArrayList<>(Arrays.asList("Tiger", "Lion", "Elephant"));
+sortAndPrintZooAnimals(arrayList);
+
+var linkedList = new LinkedList<>(List.of("Tiger", "Lion", "Elephant"));
+sortAndPrintZooAnimals(linkedList);
+```
+
+**Casting Objects**
+Object casting follows inheritance rules: upcasting to a supertype is implicit, while downcasting to a subtype requires an explicit cast.
+If the actual object is not compatible with the target type, a ClassCastException occurs at runtime.
+
+We summarize these concepts into a set of rules for you to memorize for the exam:
+1. Casting a reference from a subtype to a supertype doesn’t require an explicit cast.
+2. Casting a reference from a supertype to a subtype requires an explicit cast.
+3. At runtime, an invalid cast of a reference to an incompatible type results in a ClassCastException being thrown.
+4. The compiler disallows casts to unrelated types.
+
+Two sibling classes cannot be safely cast to each other, and you cannot access each other’s specific members. They are not in any hierarchical relationship with each other (no superclass-subclass relatiinship).
+
+You can only downcast to the object’s actual runtime type, not to a sibling type.
+Objects are considered unrelated types if one cannot be a subtype of the other. Thus, casting not allowed.
+
+**Casting Interfaces**
+- Compiler has limited checks with interfaces because classes can implement multiple interfaces and subclasses may add new ones.
+- A cast to an unrelated interface may compile, even if the class doesn’t implement it.
+- Such casts fail at runtime with ClassCastException if the object doesn’t actually implement the interface.
+- Exception: If the class is final, the compiler rejects the cast, since no subclass can implement the interface.
+
+Interface casts may compile but fail at runtime—unless the class is final, in which case invalid casts are caught at compile time.
+
+Example, 
+```java
+interface Canine {}
+interface Dog {}
+class Wolf implements Canine {}
+
+Wolf wolfy = new Wolf();
+Dog badWolf = (Dog)wolfy;   // Compiles but throws a ClassCastException at runtime.
+```
+
+The compiler does not allow a cast from an interface reference to an object reference if the object type cannot possibly implement the interface, such as if the class is marked final.
+To prevent casting to unrelated interface, we can mark the Wolf class final.
+```java
+final class Wolf implements Canine {}
+```
+The compiler recognizes that there are no possible subclasses of Wolf capable of implementing the Dog interface.
+
+**The instanceof Operator**
+The `instanceof` operator can be used to check whether an object belongs to a particular class or interface and to prevent a ClassCastException at runtime. 
+The `instanceof` operator can also be used with pattern matching. 
+Just as the compiler does not allow casting an object to unrelated types, it also does not allow `instanceof` to be used with unrelated types. 
+
+**Polymorphism and Method Overriding**
+Polymorphism states that when you override a method, you replace all calls to it, even those defined in the parent class. 
+
+*Polymorphism’s ability to replace methods at runtime via overriding is one of the most important properties of Java.*
+It allows us to create complex inheritance models with subclasses that have their own custom implementation of overridden methods. 
+It also means the parent class does not need to be updated to use the custom or overridden method. 
+If the method is properly overridden, then the overridden version will be used in all places that it is called.
+We can choose to limit polymorphic behavior by marking methods final, which prevents them from being overridden by a subclass.
+Instance method calls are resolved at runtime based on the actual object type, not the reference type.
+
+An object may take on a variety of forms, referred to as polymorphism. 
+The object is viewed as existing in memory in one concrete form but is accessible in many forms through reference variables.
+Changing the reference type of an object may grant access to new members, but the members always exist in memory.
+
+**Calling the Parent Version of an Overridden Method**
+Just because a method is overridden doesn’t mean the parent method is completely inaccessible. 
+We can use the `super` reference to access it.
+
+**Overriding vs. Hiding Members**
+While method overriding replaces the method everywhere it is called, static method and variable hiding do not.
+Strictly speaking, hiding members is not a form of polymorphism since the methods and variables maintain their individual properties. 
+Unlike method overriding, hiding members is very sensitive to the reference type and location where the member is being used. 
+
+Since static methods can only be hidden, not overridden, Java uses the reference type to determine which version of the method should be called, if there are methods with the same signature both in parent and child class.
+
+Likewise, the variables are hidden, not overridden, so the reference type is used to determine which value to resolve if there are variables with same name in both parent and child class.
+
+Overriding methods is the cornerstone of polymorphism and an extremely powerful feature.
+
+**Don’t Hide Members in Practice**
+Although Java allows us to hide variables and static methods, it is considered an extremely poor coding practice. 
+The value of the variable or method can change depending on what reference is used, making your code very confusing, difficult to follow, and challenging for others to maintain. 
+This is further compounded when you start modifying the value of the variable in both the parent and child methods, since it may not be clear which variable you’re updating.

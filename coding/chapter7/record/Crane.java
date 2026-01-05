@@ -1,5 +1,3 @@
-package coding.chapter7.record;
-
 public record Crane(int numberEggs, String name) {
 }
 
