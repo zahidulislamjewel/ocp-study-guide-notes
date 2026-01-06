@@ -7,6 +7,7 @@
 - Create program flow control constructs including if/else, switch statements and expressions, loops, and break and continue statements.
 
 ### Using Object-Oriented Concepts in Java
+
 - Implement inheritance, including abstract and sealed types as well as record classes. 
 - Override methods, including that of the Object class. Implement polymorphism and differentiate between object type and reference type. 
 - Perform reference type casting, identify object types using the instanceof operator, and pattern matching with the instanceof operator and the switch construct.

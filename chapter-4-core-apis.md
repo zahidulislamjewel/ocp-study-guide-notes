@@ -1,33 +1,41 @@
-# OCP EXAM OBJECTIVES COVERED IN THIS CHAPTER:
+# Chapter 4: Core APIs
 
-## Handling Date, Time, Text, Numeric and Boolean Values
+## OCP EXAM OBJECTIVES COVERED IN THIS CHAPTER:
+
+### Handling Date, Time, Text, Numeric and Boolean Values
+
 - Use primitives and wrapper classes. 
 - Evaluate arithmetic and boolean expressions, using the Math API and by applying precedence rules, type conversions, and casting.
 - Manipulate text, including text blocks, using String and StringBuilder classes.
 - Manipulate date, time, duration, period, instant and time-zone objects including daylight saving time using Date-Time API.
   
-# Working with Arrays and Collections
+### Working with Arrays and Collections
+
 - Create arrays, List, Set, Map and Deque collections, and add, remove, update, retrieve and sort their elements.
+
+---
 
 In the context of an application programming interface (API), an interface refers to a group of classes or Java interface definitions giving you access to functionality.
 
 **Strings Manipulation**
 
-**String Concatenation Rules**
-1. If both operands are numeric, + means numeric addition.
-2. If either operand is a String, + means concatenation.
-3. The expression is evaluated left to right.
+The String class is such a fundamental class that you’d be hard-pressed to write code without it. A string is basically a sequence of characters.
 
+**String Concatenation Rules**
+
+1. If both operands are numeric, `+` means numeric addition.
+2. If either operand is a String, `+` means concatenation.
+3. The expression is evaluated left to right.
 
 **Code Points**
 
-- Java strings use **Unicode (UTF-16)**
+- Java strings use Unicode (UTF-16)
 - A `char` is a 16-bit UTF-16 code unit, not always a full character
 - Some Unicode characters (for example, smart quotes or certain symbols) require two `char` values (surrogate pairs)
 - A code point is the numeric Unicode value (`int`) that represents one complete logical character
 - Use code point–based methods when working with non-ASCII text
 
-Examples:
+Examples,
 
 ```java
 String s = "W’€";
@@ -35,10 +43,10 @@ System.out.println(s.charAt(1));       // returns a char (UTF-16 unit)
 System.out.println(s.codePointAt(1));  // 8217
 ```
 
-> `char` counts UTF-16 code units, while code points (`int`) represent actual Unicode characters.
-
+*`char` counts UTF-16 code units, while code points (`int`) represent actual Unicode characters.*
 
 `equals(Object obj)` takes an Object rather than a String. This is because the method is the same for all objects. If an non-string (object) is passed in, it will just return false. 
+
 By contrast, the `equalsIgnoreCase(String str)` method applies only to String objects, so it can take the more specific type as the parameter.
 
 **Overriding `toString()`, `equals(Object)`, and `hashCode()`**
@@ -50,9 +58,9 @@ By contrast, the `equalsIgnoreCase(String str)` method applies only to String ob
 - Contract rule: if `a.equals(b)` is `true`, then `a.hashCode() == b.hashCode()` must also be `true`.
 - Inconsistent `equals()` and `hashCode()` can cause incorrect behavior in hash-based collections like `HashMap` and `HashSet`.
 
-> Override `toString()` for readability, override `equals()` for logical equality, and always override `hashCode()` together with `equals()`.
+*Override `toString()` for readability, override `equals()` for logical equality, and always override `hashCode()` together with `equals()`.*
 
-The strip() method does everything that trim() does, but it supports Unicode.
+The `strip()` method does everything that trim() does, but it supports Unicode.
 
 **`indent()` and Whitespace Normalization**
 
@@ -74,13 +82,14 @@ The strip() method does everything that trim() does, but it supports Unicode.
 " ".isBlank();  // true
 ```
 
-> `isEmpty()` checks length, `isBlank()` checks for non-whitespace characters.
+*`isEmpty()` checks length, `isBlank()` checks for non-whitespace characters.*
 
 **String formatting**
-By default, %f displays exactly six digits past the decimal. 
-If you want to display only one digit after the decimal, you can use %.1f instead of %f. 
+
+By default, `%f` displays exactly six digits past the decimal. If you want to display only one digit after the decimal, you can use %.1f instead of %f. 
+
 The format() method relies on rounding rather than truncating when shortening numbers. 
-For example, 90.250000 will be displayed as 90.3 (not 90.2) when passed to format() with %.1f.
+For example, `90.250000` will be displayed as `90.3` (not `90.2`) when passed to format() with %.1f.
 
 ```java
 var name = "James";
@@ -88,33 +97,43 @@ var score = 90.25;
 var total = 100;
 System.out.println("%s:%n   Score: %.2f out of %d".formatted(name, score, total));
 
-System.out.format("[%f]", pi); // [3.141593]
-System.out.format("[%12.8f]", pi); // [  3.14159265]
-System.out.format("[%012f]", pi); // [00003.141593]
-System.out.format("[%12.2f]", pi); // [        3.14]
-System.out.format("[%.3f]", pi); // [3.142]
+System.out.format("[%f]", pi);        // [3.141593]
+System.out.format("[%12.8f]", pi);    // [  3.14159265]
+System.out.format("[%012f]", pi);     // [00003.141593]
+System.out.format("[%12.2f]", pi);    // [        3.14]
+System.out.format("[%.3f]", pi);      // [3.142]
 ```
 
 **Method Chaining**
+
 ```java
 String result = "AniMaL   ".trim().toLowerCase().replace('a', 'A');
-System.out.println(result);
+System.out.println(result);          // Animal
 ```
 
 **StringBuilder vs StringBuffer**
+
 ```java
 StringBuilder sb = new StringBuilder();
 for (char ch = 'a'; ch <= 'z'; ch++) {
     sb.append(ch);
 }
+
 System.out.println(sb);
 System.out.println(sb.length());
 System.out.println(sb.toString());
 ```
 **Comparing `equals()` and `==`**
-The authors of the String class implemented a standard method called equals() to check the values inside the String rather than the string reference itself. If a class doesn’t have an equals() method, Java determines whether the references point to the same object, which is exactly what == does.
 
-The authors of StringBuilder did not implement equals(). If you call equals() on two StringBuilder instances, it will check reference equality. You can call toString() on StringBuilder to get a String to check for equality instead.
+The authors of the String class implemented a standard method called `equals()` to check the values inside the String rather than the string reference itself. 
+
+If a class doesn’t have an `equals()` method, Java determines whether the references point to the same object, which is exactly what `==` does.
+
+The authors of `StringBuilder` did not implement `equals()`. 
+
+If you call `equals()` on two `StringBuilder` instances, it will check reference equality. 
+
+We can call `toString()` on `StringBuilder` to get a String to check for equality instead.
 
 **The String Pool**
 
@@ -130,7 +149,7 @@ String y = "Hello";
 System.out.println(x == y);  // true, same reference
 ```
 
-Runtime or constructor-created strings:
+Runtime or constructor-created strings are not pooled:
 
 ```java
 String z = " Hello".trim();
@@ -152,34 +171,38 @@ Compile-time constants are pooled:
 ```java
 String s1 = "rat" + 1;               // pooled
 String s2 = "r" + "a" + "t" + "1";   // pooled
-System.out.println(s1 == s2);         // true
+System.out.println(s1 == s2);        // true
 ```
 
 Non-compile-time expressions are not pooled unless interned:
 
 ```java
 String s3 = "r" + "a" + "t" + new String("1");
-System.out.println(s1 == s3);         // false
-System.out.println(s1 == s3.intern());// true
+System.out.println(s1 == s3);           // false
+System.out.println(s1 == s3.intern());  // true
 ```
 
-Key points for OCP exam:
+**Key Points**
 
 1. `==` compares references, not content.
 2. `equals()` compares actual string content, so always use this for string comparison.
 3. String literals and compile-time constants are pooled.
-4. `new String()` and runtime expressions create new heap objects.
+4. `new String()` and runtime expressions create new heap objects, so not pooled.
 5. `intern()` forces a string to use the pool reference if available.
 
-> Understand string pooling and equality rules; never rely on `==` for content comparison, only `equals()`.
+*Understand string pooling and equality rules; never rely on `==` for content comparison, only `equals()`.*
 
-> Literals and constants are automatically pooled; runtime-generated strings are not, unless explicitly interned. This reduces memory usage by reusing identical strings.
+*Literals and constants are automatically pooled; runtime-generated strings are not, unless explicitly interned. This reduces memory usage by reusing identical strings.*
 
 
 **Understanding Arrays**
-An array is an area of memory on the heap with space for a designated number of elements. An array is an ordered list. It can contain duplicates.
+
+An array is an area of memory on the heap with space for a designated number of elements. 
+
+An array is an ordered list. It can contain duplicates.
 
 Array creation,
+
 ```java
 int[] numbers = new int[3];
 
@@ -189,6 +212,7 @@ int[] moreNumbers = {42, 55, 99}; // anonymous array because type and size not s
 ```
 
 **Important Array Methods**
+
 ```java
 Arrays.sort(arr)
 Arrays.binarySearch(arr, key)
@@ -199,10 +223,13 @@ Arrays.mismatch(arr1, arr2)
 
 `null` is smaller than any other value.
 
-variable argument i.e. varargs is supported when passed a String array to a methods. Exmaple,
-`processArray(String... args)`
+variable argument i.e. varargs is supported when passed as String array to a methods. Exmaple,
+```java
+processArray(String... args)
+```
 
 Java supports asymmetric array.
+
 ```java
 String[][] asymmetricArray = {
         { "A1", "A2", "A3" },
@@ -212,6 +239,7 @@ String[][] asymmetricArray = {
 ```        
 
 **Math API Core Methods**
+
 ```java
 Math.min(x, y)
 Math.max(x, y)
@@ -224,6 +252,7 @@ Math.random()
 
 **Using BigInteger and BigDecimal**
 Chaining with BigInteger
+
 ```java
 var bigNum = BigInteger.valueOf(5)
         .pow(2)
@@ -232,6 +261,7 @@ var bigNum = BigInteger.valueOf(5)
         .divide(BigInteger.TEN)
         .max(BigInteger.valueOf(60))
         .min(BigInteger.valueOf(80));
+
 System.out.println(bigNum);
 ```
 
@@ -245,7 +275,6 @@ Example:
 ```java
 BigInteger bigNumber = new BigInteger("12345123451234512345");
 System.out.println(bigNumber);
-
 
 long n = 12345123451234512345L; // This does not compile because the value is too large for long
 ```
@@ -265,7 +294,7 @@ BigDecimal amountInCents2 = BigDecimal.valueOf(64.1)
 System.out.println(amountInCents2); // 6410.0
 ```
 
-> use `BigInteger` for very large whole numbers and `BigDecimal` for accurate decimal calculations, especially when dealing with money.
+*Use `BigInteger` for very large whole numbers and `BigDecimal` for accurate decimal calculations, especially when dealing with money.*
 
 **Working with Dates and Times (`java.time`)**
 
@@ -291,7 +320,7 @@ System.out.println(amountInCents2); // 6410.0
 - Chaining date/time methods is allowed and common
 - Leap year rule: divisible by 4, not by 100 unless divisible by 400
 
-**Exam Tricks to Remember**
+**Exam Tricks**
 
 - Forgetting to reassign after `plus()` or `minus()`
 - Using time methods on `LocalDate`
@@ -302,6 +331,7 @@ System.out.println(amountInCents2); // 6410.0
 - Missing that DST and offsets apply only with time zones
 
 Examples,
+
 ```java
 // Date
 LocalDate date = LocalDate.of(2025, 12, 27);
@@ -325,6 +355,7 @@ LocalDate future = date.plusDays(10);
 ```
 
 There are few conversion methods in `LocalDate`, `LocalTime`, `LocalDateTime`
+
 ```java
 var date = LocalDate.of(2025, Month.FEBRUARY, 20);  // 2025-02-20
 var differentDay = date.withDayOfMonth(15);         // 2025-02-15
@@ -340,9 +371,11 @@ var start = date.atStartOfDay();    // 2025-03-03T00:00
 ```
 
 **Working with Periods**
+
 January 1, 1970, referred to as the epoch, Unix started using this date for date standards, so Java reused it.
 
 Creating Period instance,
+
 ```java
 var annually = Period.ofYears(1);            // every 1 year
 var quarterly = Period.ofMonths(3);          // every 3 months
@@ -354,6 +387,7 @@ var everyYearAndAWeek = Period.of(1, 0, 7);  // every year plus 1 week
 **Working with Duration**
 
 Create a Duration using a number of different granularities:
+
 ```java
 var daily = Duration.ofDays(1);               // PT24H
 var hourly = Duration.ofHours(1);             // PT1H
@@ -363,13 +397,7 @@ var everyMilli = Duration.ofMillis(1);        // PT0.001S
 var everyNano = Duration.ofNanos(1);          // PT0.000000001S
 ```
 
-**Period vs Duration**
-
-Here is a **slightly more descriptive but still exam-note friendly explanation**, without overusing bullet points.
-
----
-
-### Period vs Duration (java.time)
+**Period vs Duration (java.time)**
 
 `Period` and `Duration` both represent amounts of time, but they are **not interchangeable**.
 
@@ -388,18 +416,19 @@ date.plus(Duration.ofDays(1));  // runtime exception
 
 `LocalDate` has no concept of seconds or time, so adding a `Duration` (which is time-based) is not allowed and fails at runtime.
 
-> use Period when working with dates, and use Duration when working with time. 
-> If a class contains both date and time (such as `LocalDateTime` or `ZonedDateTime`), both Period and Duration can be used.
+*Use Period when working with dates, and use Duration when working with time.* 
+
+*If a class contains both date and time (such as `LocalDateTime` or `ZonedDateTime`), both Period and Duration can be used.*
 
 *Period follows the calendar, Duration follows the clock.*
 
 **Working with Instants `java.time.Instant`**
+
 The `Instant` class represents a specific moment in time in the GMT time zone. 
 
-An `Instant` is a point in time. `LocalDateTime` cannot bed converted to an `Instant`.
-A `LocalDateTime` does not contain a time zone, and it is therefore not universally recognized around the world as the same moment in time.
+An `Instant` is a point in time. `LocalDateTime` cannot be converted to an `Instant`.
 
-Here’s a **concise, descriptive OCP-note style explanation** for `Instant`:
+A `LocalDateTime` does not contain a time zone, and it is therefore not universally recognized around the world as the same moment in time.
 
 The `Instant` class represents a specific moment in time in GMT (UTC). It is commonly used to measure elapsed time or to mark a point in time precisely, independent of any time zone.
 
@@ -414,10 +443,13 @@ Duration duration = Duration.between(start, end);
 System.out.println(duration.toMillis()); // milliseconds elapsed
 ```
 
-> `Instant` cannot be created directly from a `LocalDateTime` because it lacks a time zone, and therefore it does not represent a globally recognized instant.
-> Use `Instant` for precise time measurements, comparisons, or timestamps in GMT.
+*`Instant` cannot be created directly from a `LocalDateTime` because it lacks a time zone, and therefore it does not represent a globally recognized instant.*
 
-*Instant = exact point in GMT; ZonedDateTime = local time + zone.*
+*Use `Instant` for precise time measurements, comparisons, or timestamps in GMT.*
+
+*Instant = exact point in GMT;* 
+
+*ZonedDateTime = local time + zone.*
 
 **Daylight Saving Time**
 
@@ -425,7 +457,8 @@ Some countries observe daylight saving time. This is where the clocks are adjust
 
 **U.S. daylight saving**
 
-Forward(+): When we change our clocks in March, time springs forward from 1:59 a.m. to 3:00 a.m.
-Backward(-): When we change our clocks in November, time falls back from 1.59 a.m to 1.00 am (thus we experience the hour from 1:00 a.m. to 1:59 a.m. twice)
+*Forward(`+`):* When we change our clocks in March, time springs forward from 1:59 a.m. to 3:00 a.m. Skipping from 2:00 a.m. to 2:59 a.am. altogether.
 
-Children learn this as “Spring forward in the spring, and fall back in the fall.”
+*Backward(`-`):* When we change our clocks in November, time falls back from 1.59 a.m to 1.00 am (thus we experience the hour from 1:00 a.m. to 1:59 a.m. twice)
+
+Children learn this as *“Spring forward in the spring, and fall back in the fall.”*
