@@ -457,7 +457,7 @@ Some countries observe daylight saving time. This is where the clocks are adjust
 
 **U.S. daylight saving**
 
-*Forward(`+`):* When we change our clocks in March, time springs forward from 1:59 a.m. to 3:00 a.m. Skipping from 2:00 a.m. to 2:59 a.am. altogether.
+*Forward(`+`):* When we change our clocks in March, time springs forward from 1:59 a.m. to 3:00 a.m. Skipping from 2:00 a.m. to 2:59 a.m. altogether.
 
 *Backward(`-`):* When we change our clocks in November, time falls back from 1.59 a.m to 1.00 am (thus we experience the hour from 1:00 a.m. to 1:59 a.m. twice)
 
