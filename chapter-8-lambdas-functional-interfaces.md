@@ -313,3 +313,283 @@ copyString.equals("Zebra"); // true
 ```
 
 You can’t always determine which method can be called by looking at the method reference. Instead, you have to look at the context to see what parameters are used and if there is a return type.
+
+**Working with Built-in Functional Interfaces**
+
+In generics declaration of an interface, the symbol `<T>` allows the interface to take an object of a specified type. 
+
+If a second type parameter is needed, we use the next letter, `U` with symbol `<T, U>`. 
+
+If a distinct return type is needed, we choose `R` for return as the generic type with symbol `<T, U, R>`.
+
+**Common functional interfaces**
+
+1. **Supplier<T>**
+   Supplies a value of type `T` without taking any input. 
+   Method: `get()` which returns `T`
+
+2. **Consumer<T>**
+   Consumes a value of type `T` and performs an operation without returning a result. 
+   Method: `accept(T)` which returns `void`
+
+3. **BiConsumer<T, U>**
+   Consumes two input values of types `T` and `U` and performs an operation without returning a result. 
+   Method: `accept(T, U)` which returns `void`
+
+4. **Predicate<T>**
+   Evaluates a condition on a value of type `T` and returns a boolean result.
+    Method: `test(T)` which returns `boolean`
+
+5. **BiPredicate<T, U>**
+   Evaluates a condition involving two values of types `T` and `U`. 
+   Method: `test(T, U)` which returns `boolean`
+
+6. **Function<T, R>**
+   Takes an input of type `T`, applies a transformation, and returns a result of type `R`. 
+   Method: `apply(T)` which returns `R`
+
+7. **BiFunction<T, U, R>**
+   Takes two inputs of types `T` and `U`, applies a transformation, and returns a result of type `R`. 
+   Method: `apply(T, U)` which returns `R`
+
+8. **UnaryOperator<T>**
+   A specialization of `Function` where the input and output types are the same. 
+   Method: `apply(T)` which returns `T`
+
+9.  **BinaryOperator<T>**
+   A specialization of `BiFunction` where both input parameters and the return type are the same. 
+   Method: `apply(T, T)` which returns `T`
+
+
+Most of the time we don’t assign the implementation of the interface to a variable. The interface name is implied, and it is passed directly to the method that needs it.
+
+Few more interfaces we need to know (next chapters),
+
+1. **Comparator<T>**
+   Defines a custom ordering logic for objects of type `T`, typically used for sorting collections.
+   Method: `compare(T o1, T o2)` returns an `int`
+   Returns a negative value if `o1` is less than `o2`, zero if they are equal, and a positive value if `o1` is greater than `o2`.
+
+2. **Runnable**
+   Represents a task that can be executed by a thread but does not return any result.
+   Method: `run()` returns `void`
+   Commonly used when creating threads or submitting tasks to an `Executor`.
+
+3. **Callable<V>**
+   Represents a task that can be executed by a thread and returns a result of type `V`.
+   Method: `call()` returns `V`
+   Unlike `Runnable`, it can return a value and throw checked exceptions.
+
+A useful mental contrast is:
+
+* `Runnable` is for fire-and-forget tasks.
+* `Callable` is for tasks that produce a result.
+* `Comparator` is for defining ordering logic.
+
+**Implementing Supplier**
+
+Example,
+
+```java
+@FunctionalInterface
+public interface Supplier<T> {
+      T get();
+}
+
+Supplier<LocalDate> s1 = LocalDate::now;
+Supplier<LocalDate> s2 = () -> LocalDate.now();
+ 
+LocalDate d1 = s1.get();
+LocalDate d2 = s2.get();
+ 
+System.out.println(d1);    // 2025-02-20
+System.out.println(d2);    // 2025-02-20
+```
+
+**Implementing Consumer and BiConsumer**
+
+Consumer Example,
+
+```java
+@FunctionalInterface
+public interface Consumer<T> {
+   void accept(T t);
+   // omitted default method
+}
+
+Consumer<String> c1 = System.out::println;
+Consumer<String> c2 = x -> System.out.println(x);
+ 
+c1.accept("Annie");  // Annie
+c2.accept("Annie");  // Annie
+```
+
+BiConsumer Example,
+
+```java
+@FunctionalInterface
+public interface BiConsumer<T, U> {
+   void accept(T t, U u);
+   // omitted default method
+}
+
+var map = new HashMap<String, Integer>();
+BiConsumer<String, Integer> b1 = map::put;   // instance method reference on an object since we want to call a method on the local variable map
+BiConsumer<String, Integer> b2 = (k, v) -> map.put(k, v);
+ 
+b1.accept("chicken", 7);
+b2.accept("chick", 1);
+ 
+System.out.println(map);  // {chicken=7, chick=1}
+```
+
+**Implementing Predicate and BiPredicate**
+
+Predicate Example,
+
+```java
+@FunctionalInterface
+public interface Predicate<T> {
+   boolean test(T t);
+   // omitted default and static methods
+}
+
+Predicate<String> p1 = String::isEmpty;
+Predicate<String> p2 = x -> x.isEmpty();
+ 
+System.out.println(p1.test(""));  // true
+System.out.println(p2.test(""));  // true
+```
+
+BiPredicate Example,
+
+```java
+@FunctionalInterface
+public interface BiPredicate<T, U> {
+   boolean test(T t, U u);
+   // omitted default methods
+}
+
+BiPredicate<String, String> b1 = String::startsWith;
+BiPredicate<String, String> b2 = (str, prefix) -> str.startsWith(prefix);
+ 
+System.out.println(b1.test("chicken", "chick"));  // true
+System.out.println(b2.test("chicken", "chick"));  // true
+```
+
+**Implementing Function and BiFunction**
+
+Function Example,
+
+```java
+@FunctionalInterface
+public interface Function<T, R> {
+   R apply(T t);
+   // omitted default and static methods
+}
+
+Function<String, Integer> f1 = String::length;
+Function<String, Integer> f2 = x -> x.length();
+ 
+System.out.println(f1.apply("cluck"));  // 5
+System.out.println(f2.apply("cluck"));  // 5
+```
+
+BiFunction Example,
+
+```java
+@FunctionalInterface
+public interface BiFunction<T, U, R> {
+   R apply(T t, U u);
+   // omitted default method
+}
+
+BiFunction<String, String, String> b1 = String::concat;
+BiFunction<String, String, String> b2 = (str, suffix) -> str.concat(suffix);
+ 
+System.out.println(b1.apply("baby ", "chick"));  // baby chick
+System.out.println(b2.apply("baby ", "chick"));  // baby chick
+```
+
+**Implementing UnaryOperator and BinaryOperator**
+
+UnaryOperator Example,
+
+```java
+@FunctionalInterface
+public interface UnaryOperator<T> extends Function<T, T> {
+   // omitted static method
+}
+
+UnaryOperator<String> u1 = String::toUpperCase;
+UnaryOperator<String> u2 = x -> x.toUpperCase()
+
+u1.apply("chirp");  // CHIRP
+u2.apply("chirp");  // CHIRP
+```
+
+BinaryOperator Example,
+
+```java
+@FunctionalInterface
+public interface BinaryOperator<T> extends BiFunction<T, T, T> {
+   // omitted static methods
+}
+
+BinaryOperator<String> b1 = String::concat;
+BinaryOperator<String> b2 = (s, t) -> s.concat(t);
+
+b1.apply("baby ", "chick");  // baby chick
+b2.apply("baby ", "chick");  // baby chick
+```
+
+**Checking Functional Interfaces**
+
+The first thing to do is look at how many parameters the lambda takes and whether there is a return value.
+
+When you see a `boolean` returned, think Predicate unless the generics specify a `Boolean` return type. 
+
+**Using Convenience Methods on Functional Interfaces**
+
+Convenience methods like, `and()`, `or()`, `negate()`, `andThen()` etc. are present in functional interfaces which themselves return new functional interfaces.
+
+Example 1,
+
+```java
+Predicate<String> eggPredicate = s -> s.contains("egg");
+Predicate<String> brownPredicate = s -> s.contains("brown");
+
+Predicate<String> brownEggPredicate = eggPredicate.and(brownPredicate);
+Predicate<String> otherEggPredicate = eggPredicate.and(brownPredicate.negate());
+```
+
+Example 2,
+
+```java
+Function<Integer, Integer> before = x -> x + 1;
+Function<Integer, Integer> after = x -> x * 2;
+ 
+Function<Integer, Integer> combined1 = after.compose(before);  // x + 1, and then x * 2
+Function<Integer, Integer> combined2 = before.compose(after);  // x * 2, and then x + 1
+combined1.apply(3);  // 8
+combined2.apply(3);  // 7
+```
+
+**Learning the Functional Interfaces for Primitives**
+
+**Functional Interfaces for `boolean`**
+
+```java
+@FunctionalInterface
+public interface BooleanSupplier {
+   boolean getAsBoolean();
+}
+
+BooleanSupplier b1 = () -> true;
+BooleanSupplier b2 = () -> Math.random() > .5;
+
+b1.getAsBoolean();  // true
+b2.getAsBoolean();  // false or true (non-deterministic)
+```
+
+**Functional Interfaces for double, int, and long**
