@@ -593,3 +593,90 @@ b2.getAsBoolean();  // false or true (non-deterministic)
 ```
 
 **Functional Interfaces for double, int, and long**
+
+1. Suppliers - `DoubleSupplier`, `IntSupplier`, `LongSupplier`
+2. Consumer - `DoubleConsumer`, `IntConsumer`, `LongConsumer`
+3. Predicate - `DoublePredicate`, `IntPredicate`, `LongPredicate`
+4. Function - `DoubleFunction`, `IntFunction`, `IntFunction`
+5. UnaryOperator - `DoubleUnaryOperator`, `IntUnaryOperator`, `LongUnaryOperator`
+6. BinaryOperator - `DoubleBinaryOperator`, `IntBinaryOperator`, `LongBinaryOperator`
+
+**Working with Variables in Lambdas**
+
+Functional interfaces can appear in three places with respect to lambdas: 
+1. Parameter list
+2. Local variables declared inside the lambda body
+3. Variables referenced from the lambda body
+
+**Listing Parameters in Lambdas**
+
+Specifying the type of parameters is optional. Additionally, var can be used in place of the specific type. That means all three of these statements are interchangeable:
+
+```java
+Predicate<String> p = x -> true;
+Predicate<String> p = (var x) -> true;
+Predicate<String> p = (String x) -> true;
+```
+
+The type of the lambda parameter can be determined from the context.
+A lambda infers the types from the surrounding context.
+
+Lambda parameters are just like method parameters. We can add modifiers to them. Specifically, we can add the `final` modifier or an annotation, as shown in this example:
+
+```java
+list.sort((final var x, @Deprecated var y) -> x.compareTo(y));
+```
+
+**Parameter List Formats**
+
+The compiler requires all parameters in the lambda to use the same format. Either of the following,
+- without types
+- with types
+- with `var`
+
+Some invalid parameter type declaration,
+
+```java
+(var x, y) -> "Hello"                  // DOES NOT COMPILE
+(var x, Integer y) -> true             // DOES NOT COMPILE
+(String x, var y, Integer z) -> true   // DOES NOT COMPILE
+(Integer x, y) -> "goodbye"            // DOES NOT COMPILE
+```
+
+**Using Local Variables Inside a Lambda Body**
+
+It is legal to define block instead of single expression in lambda. That block can have anything that is valid in a normal Java block, including local variable declarations.
+
+A lambda can define parameters or variables in the body as long as their names are different from existing local variables.
+
+**Keep Your Lambdas Short**
+
+Instead of writing a lot of code in lambda body or block, it is better to refactor that block into an instance method and calling that in the lambda expression.
+
+Example,
+
+```java
+Predicate<Integer> p1 = a -> returnSame(a);
+
+Predicate<Integer> p1 = this::returnSame;
+```
+
+**Referencing Variables from the Lambda Body**
+
+Lambda bodies are allowed to reference some variables from the surrounding code. 
+
+A lambda can access an instance variable, method parameter, or local variable under certain conditions (effectively final). 
+
+Instance variables (and class variables) are always allowed.
+
+The only thing lambdas cannot access are variables that are not final or effectively final.
+
+Again, the act of assigning a value is only a problem from the point of view of the lambda. Therefore, the lambda has to be the one to generate the compiler error.
+
+Rules for accessing a variable from a lambda body inside a method:
+
+1. Instance variable - Allowed
+2. Static variable - Allowed
+3. Local variable - Allowed if final or effectively final
+4. Method parameter - Allowed if final or effectively final
+5. Lambda parameter - Allowed
