@@ -1,5 +1,8 @@
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.stream.DoubleStream;
+import java.util.stream.LongStream;
 
 public class OptionalTest {
 
@@ -26,5 +29,15 @@ public class OptionalTest {
         System.out.println(opt.orElseGet(() -> Math.random() * 100));
         System.out.println(opt.orElseThrow());
         System.out.println(opt.orElseThrow(() -> new NoSuchElementException("The element is not found!")));
+
+        System.out.println("=".repeat(100));
+
+        LongStream longs = LongStream.of(5, 15);
+        long sum = longs.sum();
+        System.out.println(sum);
+
+        DoubleStream doubles = DoubleStream.generate(() -> Math.PI);
+        OptionalDouble min = doubles.min(); // runs infinitely
+        System.out.println(min.getAsDouble());
     }
 }
