@@ -3,7 +3,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CollectorTest {
+public class BasicCollectorTest {
 
     public static void main(String[] args) {
         Stream<String> wordStream = Stream.of("w", "o", "l", "f");

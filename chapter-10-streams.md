@@ -449,6 +449,7 @@ These three are the most common, so the API designers went with them.
 
 - `Stream<T> boxed()`
   Converts a primitive stream into a regular `Stream` of wrapper objects (`Integer`, `Long`, `Double`). Available on `IntStream`, `LongStream`, and `DoubleStream`. Example,
+  
   ```java
   Stream<Integer> boxed = IntStream.of(1, 2, 3).boxed();
   boxed.forEach(System.out::println);   // 1 2 3
@@ -751,4 +752,140 @@ System.out.println(optional.getAsDouble());               // 5.5
 System.out.println(optional.orElseGet(() -> Double.NaN)); // 5.5
 ```
 
-**Linking Streams to the Underlying Data**
+**Chaining Optionals**
+
+A few of the intermediate operations for streams are available for `Optional`. Advanced `Optional` instance methods are,
+
+- `filter(Predicate)` returns empty `Optional` if no value; keeps the value as `Optional` only if predicate matches
+- `map(Function)` returns empty `Optional` if no value; transforms the value and wraps result in `Optional`
+- `flatMap(Function)` returns empty `Optional` if no value; transforms the value but the function must return an `Optional` (no double-wrapping)
+
+**Key difference to remember**
+
+- `map` wraps the result
+- `flatMap` expects and returns an Optional directly
+
+Empty optionals are passed through the chining.
+
+**Checked Exceptions and Functional Interfaces**
+
+- Most functional interfaces do not allow checked exceptions
+- A method reference cannot be used if the target functional interface doesn’t declare the checked exception
+- Wrap checked exceptions into unchecked ones before using lambdas or method references
+
+**Collecting Results**
+
+Here are most common stream collectors:
+
+- `Collectors.toList()` / `Collectors.toSet()`
+  Collects elements into a `List` or `Set`.
+
+  ```java
+  List<String> list = Stream.of("a","b").collect(Collectors.toList());
+  ```
+
+- `Collectors.counting()`
+  Counts elements in the stream.
+
+  ```java
+  long count = Stream.of("a","b","c").collect(Collectors.counting());
+  ```
+
+- `Collectors.joining(CharSequence delimiter)`
+  Joins elements into a single `String`.
+
+  ```java
+  String s = Stream.of("a","b","c").collect(Collectors.joining(","));
+  ```
+
+- `Collectors.groupingBy(Function key)`
+  Groups elements into a `Map<K, List<T>>`.
+
+  ```java
+  Map<Integer, List<String>> map = Stream.of("one","two","three")
+            .collect(Collectors.groupingBy(String::length));
+  ```
+
+- `Collectors.partitioningBy(Predicate p)`
+  Splits elements into `true` and `false` groups.
+
+  ```java
+  Map<Boolean, List<Integer>> map = Stream.of(1,2,3,4)
+            .collect(Collectors.partitioningBy(n -> n % 2 == 0));
+  ```
+
+- `Collectors.mapping(Function f, Collector downstream)`
+  Transforms elements *before* collecting.
+
+  ```java
+  List<Integer> lengths = Stream.of("a","bb","ccc")
+            .collect(Collectors.mapping(String::length, Collectors.toList()));
+  ```
+
+- `Collectors.filtering(Predicate p, Collector downstream)`
+  Filters elements *inside* the collector.
+
+  ```java
+  List<Integer> evens = Stream.of(1,2,3,4)
+            .collect(Collectors.filtering(n -> n % 2 == 0, Collectors.toList()));
+  ```
+
+- `Collectors.summingInt(ToIntFunction f)`
+  Sums mapped values.
+
+  ```java
+  int sum = Stream.of("a","bb","ccc")
+            .collect(Collectors.summingInt(String::length));
+  ```
+
+- `Collectors.averagingInt(ToIntFunction f)`
+  Computes average.
+
+  ```java
+  double avg = Stream.of(10, 20, 30)
+            .collect(Collectors.averagingInt(Integer::intValue));
+  ```
+
+- `Collectors.summarizingInt(ToIntFunction f)`
+  Returns count, min, max, sum, average.
+
+  ```java
+  IntSummaryStatistics stats = Stream.of(10,20,30)
+            .collect(Collectors.summarizingInt(Integer::intValue));
+  ```
+
+- `Collectors.maxBy(Comparator c)` / `Collectors.minBy(Comparator c)`
+  Finds largest/smallest element.
+
+  ```java
+  Optional<String> max = Stream.of("a","bbb","cc")
+            .collect(Collectors.maxBy(Comparator.comparingInt(String::length)));
+  ```
+
+- `Collectors.toMap(keyFn, valueFn)`
+  Converts stream to a `Map`.
+
+  ```java
+  Map<String,Integer> map = Stream.of("a","bb")
+            .collect(Collectors.toMap(s -> s, String::length));
+  ```
+
+- `Collectors.teeing(c1, c2, combiner)`
+  Runs two collectors at once and merges results.
+
+  ```java
+  Double avg = Stream.of(10, 20, 30)
+            .collect(Collectors.teeing(
+                Collectors.summingInt(i -> i),
+                Collectors.counting(),
+                (sum, count) -> sum / (double) count
+            ));
+  ```
+
+**Exam Notes**
+
+- `groupingBy` = many buckets
+- `partitioningBy` = exactly two buckets
+- `mapping` / `filtering` = transform or filter *inside* collect
+- `summarizing` = stats in one pass
+- `teeing` = two results, one final value
