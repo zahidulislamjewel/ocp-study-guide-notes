@@ -889,3 +889,144 @@ Here are most common stream collectors:
 - `mapping` / `filtering` = transform or filter *inside* collect
 - `summarizing` = stats in one pass
 - `teeing` = two results, one final value
+
+**Using `toList()`**
+
+One of the most common collectors is `Collectors.toList()`, which turns the result back into a `List`. In fact, it is so common that there is a shortcut with a subtle difference in the resulted lists. Example, 
+
+```java
+Stream<String> s = Stream.of("lions", "tigers", "bears");
+List<String> mutableList = s.collect(Collectors.toList()); 
+
+Stream<String> t = Stream.of("lions", "tigers", "bears");
+List<String> immutableList = t.toList();
+
+mutableList.add("zebras");   // No issues
+immutableList.add("zebras"); // UnsupportedOperationException
+```
+
+**Collecting into Maps**
+
+`Collectors.toMap(..)` method has few overloaded versions which accept `Function` functional interfaces. Functions that describe the key, value construction. Example,
+
+```java
+var animals = List.of("lions", "tigers", "bears", "elephants", "birds", "ant");
+
+// Map of keys as string and value as length
+Map<String, Integer> animalMap1 = animals.stream().collect(
+    Collectors.toMap(str -> str, str -> str.length())
+);
+
+// Map of keys as string and value as length
+Map<String, Integer> animalMap2 = animals.stream().collect(
+    Collectors.toMap(str -> str, String::length)
+);
+
+// Map of keys as string and value as length
+Map<String, Integer> animalMap3 = animals.stream().collect(
+    Collectors.toMap(Function.identity(), String::length)
+);
+
+// Map of Keys as string length and value as the strings (grouping)
+Map<Integer, String> animalMap4 = animals.stream().collect(
+    Collectors.toMap(
+      String::length, 
+      Function.identity(), 
+      (s1, s2) -> s1 + ", " + s2
+    )
+);
+
+// Map of Keys as string length and value as the strings (grouping)
+// collected in TreeMap
+Map<Integer, String> animalMap5 = animals.stream().collect(
+    Collectors.toMap(
+      String::length, 
+      Function.identity(), 
+      (s1, s2) -> s1 + ", " + s2, 
+      TreeMap::new
+    )
+);
+```
+
+**Grouping, Partitioning, and Mapping**
+
+The `groupingBy()` collector tells `collect()` that it should group all of the elements of the stream into a Map. The function determines the keys in the Map. Each value in the Map is a List of all entries that match that key.
+
+Note that the function you call in `groupingBy()` cannot return `null`. It does not allow `null` keys. Example,
+
+```java
+var animals = List.of("lions", "tigers", "bears", "elephants", "birds", "ant");
+
+// Grouping by length without groupingBy(..)
+Map<Integer, String> animalMap1 = animals.stream().collect(
+    Collectors.toMap(
+      String::length, 
+      Function.identity(), 
+      (s1, s2) -> s1 + "-" + s2
+    )
+);
+
+// Grouping by length of the string
+Map<Integer, List<String>> animalMap2 = animals.stream().collect(
+    Collectors.groupingBy(String::length)
+);
+
+// Grouping by length of the string, and collecting each group to a set instead
+Map<Integer, Set<String>> animalMap3 = animals.stream().collect(
+    Collectors.groupingBy(String::length, Collectors.toSet())
+);
+
+// Grouping by length of the string, and collecting each group to a set instead
+// Constructing to TreeMap instead of Map
+TreeMap<Integer, Set<String>> animalMap4 = animals.stream().collect(
+    Collectors.groupingBy(
+      String::length, 
+      TreeMap::new, 
+      Collectors.toSet()
+    )
+);
+
+// Grouping by length of the string, and collecting each group to a list
+// Constructing to TreeMap instead of Map
+TreeMap<Integer, List<String>> animalMap5 = animals.stream().collect(
+    Collectors.groupingBy(
+      String::length, 
+      TreeMap::new, 
+      Collectors.toList()
+    )
+);
+
+// Grouping by length of the string, and counting the length of each list
+TreeMap<Integer, Long> animalMap5 = animals.stream().collect(
+    Collectors.groupingBy(
+      String::length, 
+      TreeMap::new, 
+      Collectors.counting()
+    )
+);
+```
+
+Partitioning is a special case of grouping. With partitioning, there are only two possible groups: `true` and `false`. Partitioning is like splitting a list into two parts. We need to pass a `Predicate` to the `partitioningBy(..)` based on which the stream will be partitioned. 
+
+Unlike `groupingBy()`, we cannot change the type of Map that is returned. However, as there are only two keys in the map, it really not matter which Map type we use. So, there's no downstream collector to specify the type. Example,
+
+```java
+// Partitioaing by length predicate, and collecting each group to a default list 
+Map<Boolean, List<String>> partitionMap1 = animals.stream().collect(
+    Collectors.partitioningBy(str -> str.length() <= 5)
+);
+
+// Partitioaing by length predicate, and collecting each group to a set instead
+Map<Boolean, Set<String>> partitionMap2 = animals.stream().collect(
+    Collectors.partitioningBy(
+      str -> str.length() <= 5, 
+      Collectors.toSet())
+);
+
+// Partitioaing by length predicate, and ccounting the element of each group
+Map<Boolean, Long> partitionMap2 = animals.stream().collect(
+    Collectors.partitioningBy(
+      str -> str.length() <= 5, 
+      Collectors.counting())
+);
+```
