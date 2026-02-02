@@ -1023,10 +1023,129 @@ Map<Boolean, Set<String>> partitionMap2 = animals.stream().collect(
       Collectors.toSet())
 );
 
-// Partitioaing by length predicate, and ccounting the element of each group
+// Partitioaing by length predicate, and counting the element of each group
 Map<Boolean, Long> partitionMap2 = animals.stream().collect(
     Collectors.partitioningBy(
       str -> str.length() <= 5, 
       Collectors.counting())
 );
 ```
+
+**Mapping Collectors**
+
+`mapping()` takes two parameters: the function for the value and how to group it further.
+
+```java
+var animals = List.of("lions", "tigers", "bears", "elephants", "birds", "ant");
+var animalMap1 = animals.stream().collect(
+    Collectors.groupingBy(
+        String::length,
+        Collectors.mapping(
+            str -> str.charAt(0), 
+            Collectors.minBy((a, b) -> a - b)
+        )
+    )
+);
+```
+
+**Teeing Collectors**
+
+We can use `teeing()` to return multiple values and collect them into a single object. Example, 
+
+```java
+record Separations(String spaceSeparated, String commaSeparated) {}
+
+var list = List.of("x", "y", "z");
+
+Separations result = list.stream().collect(
+    Collectors.teeing(
+        Collectors.joining(" "), 
+        Collectors.joining(","), 
+        Separations::new
+    )
+);
+
+var numbers = List.of(4, 9, 2, 3, 5, 7, 8, 1, 6, 0);
+var average = numbers.stream().collect(
+    Collectors.teeing(
+        Collectors.summingInt(Integer::valueOf), 
+        Collectors.counting(), 
+        (sum, count) -> sum / (double) count
+    )
+);
+```
+
+**Using a Spliterator**
+
+The characteristics of a `Spliterator` depend on the underlying data source. A Collection data source is a basic `Spliterator`. By contrast, when using a Stream data source, the `Spliterator` can be parallel or even infinite. The Stream itself is executed lazily rather than when the `Spliterator` is created.
+
+- A `Spliterator` lets you traverse and split elements from a collection or stream
+- Calling `trySplit()` removes part of the data into a new `Spliterator`
+- Works with both Collections and Streams
+- Stream-based spliterators can be parallel or infinite
+- Streams are lazy; splitting does not trigger execution
+
+**Core Spliterator Methods**
+
+- `Spliterator<T> trySplit()`
+  Attempts to split off roughly half the elements into a new `Spliterator`. Can be called multiple times.
+  Returns `null` if no further splitting is possible
+
+- `boolean tryAdvance(Consumer<? super T> action)`
+  Processes one element if available
+  Returns `true` if an element was processed
+
+- `void forEachRemaining(Consumer<? super T> action)`
+  Processes all remaining elements in `Spliterator`
+
+
+Example 1: Splitting a Collection
+
+```java
+var list = List.of("bird-", "bunny-", "cat-", "dog-", "fish-", "lamb-", "mouse-");
+
+Spliterator<String> original = list.spliterator();
+
+// First split removes ~half into `bag1`
+Spliterator<String> bag1 = original.trySplit();
+
+// Second split removes part of the remainder into `bag2`
+Spliterator<String> bag2 = original.trySplit();
+
+bag1.forEachRemaining(System.out::print);   // bird-bunny-cat-
+bag2.forEachRemaining(System.out::print);   // dog-fish-
+
+// Original keeps what’s left
+original.forEachRemaining(System.out::print); // lamb-mouse-
+```
+
+Example 2: Processing One Element at a Time
+
+```java
+var list = List.of("bird-", "bunny-", "cat-", "dog-", "fish-", "lamb-", "mouse-");
+
+Spliterator<String> sp = list.spliterator();
+
+sp.tryAdvance(System.out::print); // bird-
+sp.tryAdvance(System.out::print); // bunny-
+sp.forEachRemaining(System.out::print); // cat-dog-fish-lamb-mouse-
+```
+
+Example 3: Infinite Stream Spliterator
+
+```java
+Spliterator<Integer> sp =
+    Stream.iterate(1, n -> n + 1).spliterator();
+
+Spliterator<Integer> split = sp.trySplit();
+
+split.tryAdvance(System.out::print); // 1
+split.tryAdvance(System.out::print); // 2
+split.tryAdvance(System.out::print); // 3
+```
+
+Key points:
+
+- Infinite streams cannot be evenly split. It's obvious/
+- `trySplit()` gives a large chunk instead
+- We should never call `forEachRemaining()` on infinite streams
