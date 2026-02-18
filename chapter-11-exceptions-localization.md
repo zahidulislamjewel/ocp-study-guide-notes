@@ -144,8 +144,352 @@ When you see a checked exception declared inside a catch block on the exam, make
 
 **Overriding Methods with Exceptions**
 
-An overridden method in a subclass is allowed to declare fewer exceptions than the superclass or interface. 
+An overridden method in a subclass is allowed to declare fewer exceptions (or none at all) than the superclass or interface. 
 
 An overridden method not declaring one of the exceptions thrown by the parent method is similar to the method declaring that it throws an exception it never actually throws. T
 
 Similarly, a class is allowed to declare a subclass of an exception type. The idea is the same. The superclass or interface has already taken care of a broader type.
+
+The overridden method can throw fewer or narrower exceptions, but the compiler only looks at the declared type, not the actual object. The compile-time type of the reference determines what exceptions you must handle.
+
+**Recognizing Exception Classes**
+
+**RuntimeException Classes**
+
+Common unchecked exceptions (`RuntimeException` subclasses):
+
+- `ArithmeticException`: thrown when dividing by zero.
+- `ArrayIndexOutOfBoundsException`: thrown when accessing an array with an invalid index.
+- `ClassCastException`: thrown when an object is cast to an incompatible class.
+- `NullPointerException`: thrown when code tries to use `null` where an object is required.
+- `IllegalArgumentException`: thrown by the programmer to indicate an invalid or inappropriate argument.
+- `NumberFormatException`: subclass of `IllegalArgumentException`; thrown when converting a `String` to a number fails due to improper format.
+
+These are unchecked exceptions, so the compiler does not require the programmer to catch or declare them.
+
+**`NullPointerException`**
+
+For `NullPointerException`, the JVM will tell the names of the instance and static variable in nice, easy-to-read format. It is called *Helpful `NulPointerEx eption`* and thus JVM tells the programmer the object reference that triggered the `NullPointerException`. Example,
+
+```java
+Exception in thread "main" java.lang.NullPointerException:
+   Cannot invoke "String.toLowerCase()" because "Frog.name" is null
+````
+
+On local variables (including method parameters), it is not as friendly, unless the `-g:vars` argument is passesd while compilation. Example,
+
+```java
+Exception in thread "main" java.lang.NullPointerException:   
+    Cannot invoke "String.toLowerCase()" because "<parameter1>" is null
+````
+
+But, if the `-g:vars` argument is passesd while compilation, then the exception is helpful. Example,
+
+```java
+javac -g:vars Frog.java
+java Frog
+
+Exception in thread "main" java.lang.NullPointerException:
+   Cannot invoke "String.toLowerCase()" because "name" is null
+```
+
+`NumberFormatException` is a subclass of `IllegalArgumentException` which is very much relavant to the exam (the relationship between them).
+
+
+**Checked Exception Classes**
+
+
+Checked exceptions extend `Exception` but not `RuntimeException`. Checked exceptions must be handled or declared. `FileNotFoundException` and `NotSerializableException` extend `IOException`. Common Checked Exceptions:
+
+- `IOException`: error while reading or writing data
+- `FileNotFoundException`: file not found (subclass of `IOException`)
+- `NotSerializableException`: object not serializable (subclass of `IOException`)
+- `ParseException`: input data cannot be parsed
+
+
+**Error Classes**
+
+Errors extend `Error` and are *unchecked*. They are thrown by the JVM and should not be handled or declared. Programs usually cannot recover from errors, and on the exam you just need to recognize them as serious JVM problems. Common Errors:
+
+- `ExceptionInInitializerError`: thrown when a static initializer fails
+- `StackOverflowError`: thrown due to deep or infinite recursion
+- `NoClassDefFoundError`: class was present at compile time but missing at runtime
+- `OutOfMemoryError`: JVM runs out of heap memory while allocating objects
+
+
+**Handling Exceptions**
+
+1. Using `try` and `catch` Statements
+2. Automating Resource Management (try-with-resources)
+
+**Using `try` and `catch` Statements**
+
+A `try` block must be followed by at least one `catch` or a `finally` block. A `try` block alone is invalid and will not compile.
+
+**Chaining catch Blocks**
+
+If multiple execptions are chained together, that are in inheritance relationship, more specific (subclass) exception should be caught first. The order matters. For example,
+
+```java
+// NumberFormatException should be caught first
+NumberFormatException extends IllegalArgumentException
+
+// FileNotFoundException should be caught first
+FileNotFoundException extends IOException
+```
+
+At most one catch block will run, and it will be the first catch block that can handle the exception. 
+
+**Applying a Multi-catch Block**
+
+If we want the result of an exception that is thrown to be the same, regardless of which particular exception is thrown, we can use a multi-catch block.
+A multi-catch block allows multiple exception types to be caught by the same catch block.
+
+Java intends multi-catch to be used for exceptions that aren’t related, and it prevents you from specifying redundant types in a multi-catch. 
+
+Specifying related exceptions in the multi-catch is redundant.
+
+The one difference between multi-catch blocks and chaining catch blocks is that order does not matter for a multi-catch block within a single catch expression.
+
+**Adding a `finally` Block**
+
+The `finally` block always executes, whether or not an exception occurs.
+The `catch` block is optional when `finally` is used.
+
+There are two paths through code with both a catch and a finally. 
+
+1. If an exception is thrown, the `finally` block is run after the `catch` block. 
+2. If no exception is thrown, the `finally` block is run after the `try` block completes.
+
+If a `try` statement with a `finally` block is entered, then the `finally` block will always be executed, regardless of whether the code completes successfully.
+
+**`System.exit()`**
+
+There is one exception to “the finally block will always be executed” rule: Java defines a method that you call as `System.exit()`. It takes an integer parameter that represents the status code that is returned.
+
+```java
+try {   
+    System.exit(0);
+} finally {   
+    System.out.print("Never going to get here");  // Not printed
+}
+```
+
+**2. Automating Resource Management**
+
+**Resource Leak**
+
+Applications often interact with external resources such as files and databases by opening a connection or stream, performing read/write operations, and then closing the resource. If a resource is not properly closed, it can lead to a resource leak. This happens when connections remain open, eventually exhausting available resources.
+
+For example, failing to close database connections may prevent other parts of the application—or even other applications—from accessing the database. While memory leaks are commonly discussed, resource leaks can be just as harmful, making critical systems inaccessible. In exam contexts, resources usually refer to files or databases that require streams or connections, which must always be closed after use.
+
+**Introducing Try-with-Resources**
+
+*try-with-resources* statement automatically closes all resources opened in a try clause. This feature is also known as automatic resource management, because Java automatically takes care of the closing. Example,
+
+```java
+try (FileInputStream is = new FileInputStream("file.txt")) {
+    // Read the file
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
+
+By using a try-with-resources statement, we guarantee that as soon as a connection passes out of scope, Java will attempt to close it within the same method. 
+
+Behind the scenes, the compiler replaces a try-with-resources block with a try and finally block. We refer to this “hidden” finally block as an implicit finally block since it is created and used by the compiler automatically.
+
+You can still create a programmer-defined finally block when using a try-with-resources statement; just be aware that the implicit one will be called first.
+
+**Notes**
+
+Unlike garbage collection, resources are not automatically closed when they go out of scope.
+
+Therefore, it is recommended that you close resources in the same block of code that opens them. By using a try-with-resources statement to open all your resources, this happens automatically.
+
+**Basics of Try-with-Resources**
+
+One or more resources can be opened in the try clause. When multiple resources are opened, they are closed in the reverse of the order in which they were created. 
+
+Parentheses are used to list those resources, and semicolons are used to separate the declarations. This works just like declaring multiple indexes in a for loop. Example,
+
+```java
+try (var in = new FileInputStream("input.txt"); var out = = new FileOutputStream("output.txt");) {
+    // Protected Code
+} catch (IOException e) {
+    // Exception handler
+} finally {
+    // finally block
+}
+```
+
+With *try-with-resources* the `catch` and `finally` blocks are optional.
+
+For the exam, it is required to know that the implicit finally block runs before any programmer-coded ones.
+
+**Constructing Try-with-Resources Statements**
+
+Only classes that implement the `AutoCloseable` interface can be used in a try-with-resources statement. 
+
+Inheriting `AutoCloseable` requires implementing a compatible `close()` method.
+
+```java
+interface AutoCloseable {   
+    public void close() throws Exception;
+}
+```
+
+Resources that implement `Closeable` rather than `AutoCloseable` also support *try-with-resources* statement since `Closeable` interface extends `AutoCloseable` interface. The only difference between the two is that `close()` method of `Closeable` interface declares `IOException`, while `close()` method `AutoCloseable` interface declares `Exception`.
+
+**Declaring Resources**
+
+We can declare a resource using `var` as the data type in a *try-with-resources* statement, since resources are local variables within the scope. Example,
+
+```java
+try (var f = new BufferedInputStream(new FileInputStream("it.txt"))) {   
+    // Process file
+}
+```
+
+**Scope of Try-with-Resources**
+
+The resources created in the try clause are in scope only within the try block.
+
+The implicit finally runs before any explicit catch/finally blocks and the implicit `close()` has run already, and the resource is no longer available.
+
+In a traditional try statement, the variable has to be declared before the try statement so that both the try and finally blocks can access it, which has the unpleasant side effect of making the variable in scope for the rest of the method, just inviting the programmer to call it by accident.
+
+**Following Order of Operations**
+
+When working with *try-with-resources* statements, it is important to know that resources are closed in the reverse of the order in which they are created. 
+
+For the exam, remember, the resources are closed in the reverse of the order in which they are declared, and the implicit finally is executed before the programmer-defined finally.
+
+**Applying Effectively Final**
+
+While resources are often created in the *try-with-resources* statement, it is possible to declare them ahead of time, provided they are marked final or are effectively final.
+
+*Remember, the test for <u>effectively final</u> is that if we insert the final keyword when the variable is declared, the code still compiles.*
+
+If a variable is not an effectively final variable, it cannot be used in a try-with-resources.
+
+**Understanding Suppressed Exceptions**
+
+In a try-with-resources statement, Java automatically calls `close()` after the try block finishes.
+
+But If:
+
+- The try block throws an exception, and
+- The `close()` method also throws an exception
+
+Then:
+
+- The exception from the try block becomes the primary exception.
+- The exception from `close()` becomes a suppressed exception.
+- Suppressed exceptions are attached to the primary exception and can be retrieved using `getSuppressed()`.
+- Catch blocks match only the primary exception, not suppressed ones.
+
+
+```java
+class CloseableResource implements AutoCloseable {
+
+    @Override
+    public void close() {
+        throw new IllegalStateException("Problem while closing resource");
+    }
+}
+
+void main(String[] args) {
+    try (CloseableResource r = new CloseableResource()) {
+        System.out.println("Using closeable resource");
+        throw new RuntimeException("Prblem while executing try-with-resources");
+    } catch (IllegalStateException e) {
+        System.out.println("Exception for resource closing (uncaught, suppressed)");
+    } catch (Exception e) {
+        System.out.println("Main exception: " + e.getMessage());
+        e.forEach((Throwable t) -> System.out.println("Suppressed: " + t.getMessage()));
+    }
+}
+
+// Output:
+// Primary: Problem inside try block
+// Suppressed: Problem while closing resource
+```
+
+**Key Rules**
+
+If both the try block and `close()` throw exceptions:
+
+- The try block exception wins.
+- The `close()` exception is suppressed.
+- Only the primary exception determines which catch block runs.
+
+
+
+**1. Suppressed Exceptions Are Stored Automatically**
+
+Java remembers the suppressed exceptions that go with a primary exception even if we don’t handle them in the code.
+
+Even if you do not call `getSuppressed()`, Java still attaches suppressed exceptions to the primary exception internally. They are preserved unless something else replaces the primary exception.
+
+**2. Multiple Resources**
+
+If multiple resources throw exceptions:
+
+- Resources are closed in reverse order of declaration.
+- The first exception thrown during closing becomes the primary exception.
+- Any additional exceptions are suppressed.
+- Because of reverse closing order, the primary exception will come from the last declared resource that throws.
+
+Example concept:
+
+```java
+try (A a = new A(); B b = new B()) {
+    // no exception here
+}
+```
+
+Closing order:
+
+1. `b.close()`
+2. `a.close()`
+
+If both throw exceptions:
+
+- Exception from `b.close()` becomes primary.
+- Exception from `a.close()` becomes suppressed.
+
+**3. Suppressed Exceptions Do NOT Apply to finally**
+
+Suppressed exceptions only apply to exceptions thrown in the try-with-resources process (try block + automatic close).
+
+If a finally block throws an exception, it replaces everything before it.
+
+Example:
+
+```java
+try (CloseableResource r = new CloseableResource()) {
+    throw new IllegalStateException("Error in try");
+} finally {
+    throw new RuntimeException("Error in finally");
+}
+```
+
+What happens:
+
+1. Try throws `IllegalStateException`.
+2. Resource is closed (may add suppressed exception).
+3. Finally throws `RuntimeException`.
+4. The finally exception replaces all previous exceptions.
+
+Final result:
+Only the RuntimeException is visible.
+Previous exceptions are lost.
+
+**Exam Notes**
+
+- Suppressed exceptions occur when `close()` throws after a try exception.
+- Only the primary exception determines which catch block runs.
+- Resources close in reverse order.
+- Finally exceptions override and discard previous exceptions.
+- Throwing exceptions from finally is bad practice because it hides earlier failures.
