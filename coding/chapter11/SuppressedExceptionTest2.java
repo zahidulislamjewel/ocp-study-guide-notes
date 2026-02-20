@@ -1,3 +1,4 @@
+import java.text.NumberFormat;
 
 class CloseableResource implements AutoCloseable {
 

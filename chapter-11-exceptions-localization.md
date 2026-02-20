@@ -493,3 +493,200 @@ Previous exceptions are lost.
 - Resources close in reverse order.
 - Finally exceptions override and discard previous exceptions.
 - Throwing exceptions from finally is bad practice because it hides earlier failures.
+
+**Formatting Values**
+
+Java provides APIs to format numbers, dates, and times for user display. For the exam, focus on `NumberFormat`, `DecimalFormat`, and `DateTimeFormatter`, including custom patterns and symbol compatibility.
+
+**Formatting Numbers**
+
+`NumberFormat` is an abstract class used to format numeric values. It provides:
+
+- `format(double)`
+- `format(long)`
+
+```java
+abstract class NumberFormat {
+    public final String format(double number)
+    public final String format(long number)
+}
+
+class DecimalFormat extends NumberFormat {}
+class CompactNumberFormat extends NumberFormat {}
+```
+
+`DecimalFormat` is a concrete subclass used with pattern strings:
+
+```java
+double d = 1234.567;
+
+NumberFormat f1 = new DecimalFormat("###,###,###.0");
+System.out.println(f1.format(d));   // 1,234.6
+
+NumberFormat f2 = new DecimalFormat("000,000,000.00000");
+System.out.println(f2.format(d));   // 000,001,234.56700
+
+NumberFormat f3 = new DecimalFormat("Your Balance $#,###,###.##");
+System.out.println(f3.format(d));   // Your Balance $1,234.57
+```
+
+Important pattern symbols:
+
+- `#` optional digit, omitted if not present
+- `0` mandatory digit, displays 0 if not present
+- `,` grouping separator
+- `.` decimal separator
+- Literal text may be included directly
+
+`#` removes unused positions.
+`0` forces leading or trailing zeros.
+Rounding occurs if fewer decimal places are specified.
+
+You should also know that `CompactNumberFormat` is another subclass of `NumberFormat`.
+
+**Formatting Dates and Times**
+
+Date and time objects provide accessor methods:
+
+```java
+LocalDate date = LocalDate.of(2025, Month.OCTOBER, 20);
+
+date.getDayOfWeek();   // MONDAY
+date.getMonth();       // OCTOBER
+date.getYear();        // 2025
+date.getDayOfYear();   // 293
+```
+
+**Using Standard Formatters**
+
+`DateTimeFormatter` provides predefined formats:
+
+```java
+LocalDate date = LocalDate.of(2025, Month.OCTOBER, 20);
+LocalTime time = LocalTime.of(11, 12, 34);
+LocalDateTime dt = LocalDateTime.of(date, time);
+
+System.out.println(date.format(DateTimeFormatter.ISO_LOCAL_DATE));      // 2025-10-20
+System.out.println(time.format(DateTimeFormatter.ISO_LOCAL_TIME));      // 11:12:34
+System.out.println(dt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));   // 2025-10-20T11:12:34
+```
+
+Formatting with an incompatible type causes a runtime exception:
+
+```java
+date.format(DateTimeFormatter.ISO_LOCAL_TIME);   // DateTimeException
+time.format(DateTimeFormatter.ISO_LOCAL_DATE);   // DateTimeException
+```
+
+**Custom Date/Time Formats**
+
+Custom patterns are created using:
+
+```java
+DateTimeFormatter.ofPattern("pattern")
+```
+
+Example:
+
+```java
+var dt = LocalDateTime.of(2025, Month.OCTOBER, 20, 6, 15, 30);
+var formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss");
+
+System.out.println(dt.format(formatter));   // 10/20/2025 06:15:30
+```
+
+Common pattern symbols:
+
+- `y` year
+- `M` month
+- `d` day
+- `H` 24-hour format
+- `h` 12-hour format
+- `m` minute
+- `s` second
+- `a` AM or PM
+- `z` time zone name
+- `Z` time zone offset
+
+Case matters:
+
+- `M` is month, `m` is minute
+- `H` is 24-hour, `h` is 12-hour
+
+Number of letters changes formatting:
+
+- `M` minimal digits
+- `MM` two digits
+- `MMM` short name
+- `MMMM` full name
+
+Example:
+
+```java
+var dt = LocalDateTime.of(2025, Month.OCTOBER, 20, 6, 15, 30);
+
+System.out.println(dt.format(DateTimeFormatter.ofPattern("MM_yyyy_-_dd"))); // 10_2025_-_20
+System.out.println(dt.format(DateTimeFormatter.ofPattern("hh:mm:z")));      // DateTimeException (no zone)
+```
+
+`LocalDateTime` does not contain time zone data. Use `ZonedDateTime` when formatting with `z` or `Z`.
+
+**Symbol Compatibility by Type**
+
+You must match pattern symbols with the correct date/time type:
+
+- `LocalDate` supports year, month, day
+- `LocalTime` supports hour, minute, second
+- `LocalDateTime` supports both date and time fields
+- `ZonedDateTime` supports date, time, and zone symbols
+
+Using unsupported symbols results in a runtime exception.
+
+**Two Ways to Format**
+
+Both of the following are valid and equivalent:
+
+```java
+var dt = LocalDateTime.of(2025, Month.OCTOBER, 20, 6, 15, 30);
+var formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss");
+
+System.out.println(dt.format(formatter));        // 10/20/2025 06:15:30
+System.out.println(formatter.format(dt));        // 10/20/2025 06:15:30
+```
+
+**Adding Custom Text**
+
+Unescaped letters are interpreted as pattern symbols. To include literal text, use single quotes.
+
+Correct usage:
+
+```java
+var dt = LocalDateTime.of(2025, Month.OCTOBER, 20, 6, 15, 30);
+var f = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' hh:mm");
+
+System.out.println(dt.format(f));   // October 20, 2025 at 06:15
+```
+
+To include a single quote in output, use two single quotes:
+
+```java
+var g = DateTimeFormatter.ofPattern("MMMM dd', Party''s at' hh:mm");
+
+System.out.println(dt.format(g));   // October 20, Party's at 06:15
+```
+
+Invalid patterns throw `IllegalArgumentException`:
+
+```java
+DateTimeFormatter.ofPattern("The time is hh:mm");   // IllegalArgumentException
+DateTimeFormatter.ofPattern("'Time is: hh:mm: ");   // IllegalArgumentException (unterminated quote)
+```
+
+**Exam Notes**
+
+- `DecimalFormat` uses `#` and `0` for digit control.
+- `DateTimeFormatter` is type-sensitive; mismatched symbols cause runtime exceptions.
+- Case matters in date/time patterns.
+- Use single quotes to escape literal text.
+- Incomplete or invalid pattern symbols cause runtime exceptions.
+- `ZonedDateTime` is required for time zone formatting.
