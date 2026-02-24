@@ -494,7 +494,9 @@ Previous exceptions are lost.
 - Finally exceptions override and discard previous exceptions.
 - Throwing exceptions from finally is bad practice because it hides earlier failures.
 
-**Formatting Values**
+---
+
+## Formatting Values
 
 Java provides APIs to format numbers, dates, and times for user display. For the exam, focus on `NumberFormat`, `DecimalFormat`, and `DateTimeFormatter`, including custom patterns and symbol compatibility.
 
@@ -690,3 +692,380 @@ DateTimeFormatter.ofPattern("'Time is: hh:mm: ");   // IllegalArgumentException 
 - Use single quotes to escape literal text.
 - Incomplete or invalid pattern symbols cause runtime exceptions.
 - `ZonedDateTime` is required for time zone formatting.
+
+# Internationalization and Localization
+
+Applications used across multiple countries must support different languages, number formats, and date formats.
+
+- Internationalization is designing software so it can be adapted to multiple regions.
+- Localization is adapting the software for a specific locale, including translating text and formatting data correctly.
+- A locale represents a language and optional country combination.
+- Future-proofing applications means externalizing text and using locale-aware formatters from the start.
+
+**Working with Locale**
+
+The `Locale` class is in `java.util`.
+
+**Getting the Default Locale**
+
+```java
+Locale locale = Locale.getDefault();
+System.out.println(locale);   // example: en_US
+```
+
+Locale format rules:
+
+* Language code is lowercase and required.
+* Country code is uppercase and optional.
+* Language and country are separated by an underscore.
+
+Valid examples:
+
+* `en`
+* `en_US`
+* `fr_FR`
+
+Invalid examples:
+
+* `US`              // country without language
+* `enUS`            // missing underscore
+* `US_en`           // reversed
+* `EN`              // language must be lowercase
+
+You do not need to memorize language codes for the exam, but you must recognize correct formatting.
+
+**Creating a Locale**
+
+**Using Constants**
+
+```java
+System.out.println(Locale.GERMAN);    // de
+System.out.println(Locale.GERMANY);   // de_DE
+```
+
+`GERMAN` specifies language only.
+`GERMANY` specifies language and country.
+
+**Using Factory Methods**
+
+```java
+System.out.println(Locale.of("fr"));        // fr
+System.out.println(Locale.of("hi", "IN"));  // hi_IN
+```
+
+Java allows invalid codes like `xx_XX`, but they may not match real locale behavior.
+
+**Using Builder**
+
+```java
+Locale l1 = new Locale.Builder()
+        .setLanguage("en")
+        .setRegion("US")
+        .build();
+
+Locale l2 = new Locale.Builder()
+        .setRegion("US")
+        .setLanguage("en")
+        .build();
+```
+
+Order does not matter.
+
+Constructors such as `new Locale("en")` are deprecated.
+
+**Changing the Default Locale**
+
+```java
+System.out.println(Locale.getDefault());  // en_US
+
+Locale locale = Locale.of("fr");
+Locale.setDefault(locale);
+
+System.out.println(Locale.getDefault());  // fr
+```
+
+This change affects only the current program execution.
+
+**Localizing Numbers**
+
+Use `NumberFormat` factory methods:
+
+- `getInstance()`
+- `getNumberInstance()`
+- `getCurrencyInstance()`
+- `getPercentInstance()`
+- `getIntegerInstance()`
+- `getCompactNumberInstance()`
+
+These methods accept either no argument (default locale) or a specific `Locale`.
+
+Formatting converts numbers to `String`.
+
+Example:
+
+```java
+int attendeesPerYear = 3_200_000;
+int attendeesPerMonth = attendeesPerYear / 12;
+
+var us = NumberFormat.getInstance(Locale.US);
+System.out.println(us.format(attendeesPerMonth));   // 266,666
+
+var gr = NumberFormat.getInstance(Locale.GERMANY);
+System.out.println(gr.format(attendeesPerMonth));   // 266.666
+
+var ca = NumberFormat.getInstance(Locale.CANADA_FRENCH);
+System.out.println(ca.format(attendeesPerMonth));   // 266 666
+```
+
+Different locales use different grouping separators.
+
+**Currency**
+
+```java
+double price = 48;
+
+var us = NumberFormat.getCurrencyInstance(Locale.US);
+System.out.println(us.format(price));   // $48.00
+
+var uk = NumberFormat.getCurrencyInstance(Locale.UK);
+System.out.println(uk.format(price));   // £48.00
+```
+
+Use `int` or `BigDecimal` for money in real applications.
+
+**Percentages**
+
+```java
+double successRate = 0.802;
+
+var us = NumberFormat.getPercentInstance(Locale.US);
+System.out.println(us.format(successRate));   // 80%
+
+var gr = NumberFormat.getPercentInstance(Locale.GERMANY);
+System.out.println(gr.format(successRate));   // 80 %
+```
+
+**Parsing Numbers**
+
+Parsing converts `String` to `Number`.
+
+```java
+String s = "40.45";
+
+var en = NumberFormat.getInstance(Locale.US);
+System.out.println(en.parse(s));   // 40.45
+
+var fr = NumberFormat.getInstance(Locale.FRANCE);
+System.out.println(fr.parse(s));   // 40
+```
+
+In France, `.` is not a decimal separator, so parsing stops early.
+
+Parsing currency:
+
+```java
+String income = "$92,807.99";
+
+var cf = NumberFormat.getCurrencyInstance(Locale.US);
+double value = (Double) cf.parse(income);
+
+System.out.println(value);   // 92807.99
+```
+
+`parse()` returns `Number`, which can be cast.
+
+**CompactNumberFormat**
+
+`CompactNumberFormat` is a subclass of `NumberFormat`.
+
+It shortens large numbers based on locale.
+
+Rules:
+
+- Determines highest range such as thousand or million.
+- Keeps up to three digits.
+- Rounds the last digit if needed.
+- SHORT uses symbols such as K or M.
+- LONG uses full words.
+
+Example:
+
+```java
+var shortUS = NumberFormat.getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT);
+var longUS  = NumberFormat.getCompactNumberInstance(Locale.US, NumberFormat.Style.LONG);
+
+System.out.println(shortUS.format(7_123_456));  // 7M
+System.out.println(longUS.format(7_123_456));   // 7 million
+```
+
+Parsing:
+
+```java
+var compact = NumberFormat.getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT);
+
+System.out.println(compact.parse("1M"));        // 1000000
+System.out.println(compact.parse("1000000"));   // 1000000
+System.out.println(compact.parse("1,000,000")); // 1
+```
+
+Parsing stops at unsupported characters.
+
+**Localizing Dates**
+
+Use `DateTimeFormatter` factory methods:
+
+- `ofLocalizedDate()`
+- `ofLocalizedTime()`
+- `ofLocalizedDateTime()`
+
+Each takes a `FormatStyle`:
+
+- `SHORT`
+- `MEDIUM`
+- `LONG`
+- `FULL`
+
+Example:
+
+```java
+Locale.setDefault(Locale.of("en", "US"));
+
+var italy = Locale.of("it", "IT");
+var dt = LocalDateTime.of(2025, Month.OCTOBER, 20, 15, 12, 34);
+
+var formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT);
+
+System.out.println(formatter.format(dt));                // 10/20/25
+System.out.println(formatter.withLocale(italy).format(dt)); // 20/10/25
+```
+
+Locale significantly changes date and time representation.
+
+**Locale Categories**
+
+`Locale.Category` allows separate control:
+
+* `DISPLAY` for language display
+* `FORMAT` for formatting dates, numbers, currency
+
+Example:
+
+```java
+var spain = Locale.of("es", "ES");
+var money = 1.23;
+
+Locale.setDefault(Locale.of("en", "US"));
+System.out.println(NumberFormat.getCurrencyInstance().format(money)); // $1.23
+
+Locale.setDefault(Locale.Category.FORMAT, spain);
+System.out.println(NumberFormat.getCurrencyInstance().format(money)); // 1,23 €
+```
+
+Setting the default locale normally updates both categories.
+
+**Resource Bundles**
+
+A resource bundle stores locale-specific key/value pairs.
+
+Typically stored in `.properties` files:
+
+`Zoo_en.properties`
+
+```
+hello=Hello
+open=The zoo is open
+```
+
+`Zoo_fr.properties`
+
+```
+hello=Bonjour
+open=Le zoo est ouvert
+```
+
+**Loading a Resource Bundle**
+
+```java
+public static void printWelcomeMessage(Locale locale) {
+    var rb = ResourceBundle.getBundle("Zoo", locale);
+    System.out.println(rb.getString("hello") + ", " + rb.getString("open"));
+}
+```
+
+Java selects the most specific matching bundle.
+
+
+**Resource Bundle Lookup Order**
+
+Java searches in this order:
+
+- Requested language and country
+- Requested language only
+- Default language and country
+- Default language only
+- Base bundle without locale
+- If none found, throws `MissingResourceException`
+
+For example, requesting `en_CA`:
+
+* Zoo_en_CA.properties
+* Zoo_en.properties
+* Zoo.properties
+
+Once a matching hierarchy is found, only that hierarchy is used.
+
+If a key is missing:
+
+```java
+rb.getString("close");   // MissingResourceException
+```
+
+**Formatting Messages**
+
+Use `MessageFormat` for parameter substitution.
+
+Property:
+
+```
+helloGreeting=Hello, {0} and {1}
+```
+
+Java:
+
+```java
+String greeting = rb.getString("helloGreeting");
+System.out.println(MessageFormat.format(greeting, "Tammy", "Henry"));
+// Hello, Tammy and Henry
+```
+
+**Properties Class**
+
+`Properties` is similar to `Map<String, String>`.
+
+```java
+var props = new Properties();
+props.setProperty("name", "Our zoo");
+props.setProperty("open", "10am");
+```
+
+Retrieving values:
+
+```java
+System.out.println(props.getProperty("camel"));           // null
+System.out.println(props.getProperty("camel", "Bob"));   // Bob
+```
+
+Only `getProperty()` supports a default value.
+
+`get()` does not accept two parameters.
+
+**Exam Notes**
+
+- Locale format must follow language_lowercase and optional _COUNTRY.
+- NumberFormat and DateTimeFormatter are locale-sensitive.
+- CompactNumberFormat shortens large numbers.
+- Parsing depends on locale rules.
+- Resource bundles follow a specific lookup hierarchy.
+- Missing keys throw `MissingResourceException`.
+- Use `MessageFormat` for parameterized messages.
+- `Locale.Category` allows separate DISPLAY and FORMAT control.
