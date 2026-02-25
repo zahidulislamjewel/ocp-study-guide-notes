@@ -29,7 +29,182 @@ Java more closely follows the rules for mathematics.
 
 `Unary (R-L) > Math (Arithmetic) > Shift > Comparison > Equality > Bitwise AND-OR > Logical AND-OR > Ternary (R-L) > Assignment (R-L) > Arrow (R-L)`
 
-**Tips** 
+**Operator precedence, grouped by category (highest to lowest)**
+
+**1. Postfix (Left to Right)**
+
+- `expr++` post-increment
+- `expr--` post-decrement 
+
+Example,
+
+```java
+int a = 5;
+int b = a++; // b = 5, a = 6
+```
+
+**2. Unary / Prefix (Right to Left)**
+
+- `++` pre-increment
+- `--` pre-decrement
+- `+` unary plus
+- `-` unary minus
+- `!` logical `NOT` operation
+- `~` bitwise `NOT` operation
+- `(type)` casting
+
+Example:
+
+```java
+int x = -5;
+boolean b = !true; // false
+
+int a = 5;
+int b = ++a; // a = 6, b = 6
+
+int num = (int) userInput;
+```
+
+***Important Clarification***
+
+- Precedence is about binding strength, not execution order.
+- `a++` binds tighter than `++a`. Both are still evaluated at runtime
+- Postfix has higher precedence than prefix
+
+**3. Arithmetic**
+
+- `*` multiplication
+- `/` division
+- `%` modulo
+- `+` addition
+- `-` subtraction
+
+Example:
+
+```java
+int result = 10 + 5 * 2; // 20
+```
+
+**4. Shift**
+
+- `<<` signed left shift
+- `>>` signed right shift
+- `>>>` unsigned right shift
+
+Example:
+
+```java
+int value = 8 << 1; // 16
+```
+
+**5. Comparison (Relational)**
+
+- `>` greter than
+- `>=` greater than or equal
+- `<` less than
+- `<=` less than or equal
+- `instanceof`
+
+Example:
+
+```java
+boolean check = 10 > 5; // true
+```
+
+**6. Equality**
+
+- `==` equal
+- `!=` not equal
+
+Example:
+
+```java
+boolean same = 10 == 10; // true
+```
+
+**7. Bitwise**
+
+- `&` bitwise and
+- `^` bitwise exclusive or (xor)
+- `|` bitwise or
+
+Example:
+
+```java
+int result = 5 & 3; // 1
+```
+
+**8. Logical (Short-Circuit)**
+
+- `&&` logical and
+- `||` logical or
+
+Example:
+
+```java
+boolean valid = true && false; // false
+```
+
+**9. Ternary (Right to Left)**
+
+* `?:` ternary 
+
+Example:
+
+```java
+int max = (5 > 3) ? 5 : 3; // 5
+```
+
+**10. Assignment (Right to Left)**
+
+- `=`
+- `+=`
+- `-=`
+- `*=`
+- `/=`
+- `%=`
+- `&=`
+- `^=`
+- `|=`
+- `<<=`
+- `>>=`
+- `>>>=`
+
+Example:
+
+```java
+int x = 5;
+x += 3; // 8
+```
+
+**11. Arrow (Right to Left)**
+
+- `->` lambda expression
+
+Example:
+
+```java
+Runnable r = () -> System.out.println("Hello");
+```
+
+
+**Quick Memory Summary (High to Low Precedence)**
+
+```markdown
+1. Postfix Unary
+3. Prefix Unary  
+3. Arithmetic  
+4. Shift  
+5. Comparison  
+6. Equality  
+7. Bitwise  
+8. Logical  
+9. Ternary  
+10. Assignment  
+11. Arrow  
+```
+
+**Professional Tips** 
 
 When encountering code in your professional career in which you are not sure about the order of operation, feel free to add optional parentheses. While often not required, they can improve readability, especially as you’ll see with ternary operators.
 
@@ -57,6 +232,52 @@ Numeric promotion in Java is the automatic conversion of smaller or compatible n
 2. If one of the values is integral and the other is floating-point, Java will automatically promote the integral value to the floating-point value’s data type.
 3. Smaller data types, namely, `byte`, `short`, and `char`, are first promoted to `int` any time they’re used with a Java binary arithmetic operator with a variable (as opposed to a value), even if neither of the operands is `int`. (unary increment/decrement operators are excluded)
 4. After all promotion has occurred and the operands have the same data type, the resulting value will have the same data type as its promoted operands.
+
+Example,
+
+```java
+byte a = 5;
+short b = 10;
+char c = 'A';
+int i = 20;
+long l = 100L;
+float f = 2.5f;
+double d = 3.5;
+
+// Smaller integral types promoted to int
+// byte + short; char promoted to int, result is int
+int result1 = a + b;      
+
+// byte + char; char promoted to int, result is int
+int result2 = a + c;      
+
+// Integral and floating-point promotion
+ // int + float; int promoted to float
+float result3 = i + f;   
+
+// long + double; long promoted to double
+double result4 = l + d;   
+
+// All operands promoted before arithmetic
+// byte + short + char + float; all promoted to 
+// float (then double if assigned to double)
+double result5 = a + b + c + f; 
+
+// Unary operations do not promote
+byte x = 10;
+
+// no promotion; x remains byte
+x++;                        
+```
+
+**Notes**
+
+- Promotion occurs automatically, no casting needed.
+- Assigning a promoted result to a smaller type may require explicit casting:
+
+```java
+byte small = (byte)(a + b);  // compiles with cast
+```
 
 **Casting Values**
 
@@ -87,7 +308,8 @@ int fish = (int)1.0;            // Compiles
 short bird = (short)1921222;    // Stored as 20678
 int mammal = (int)9f;           // Compiles
 
-// This still does not compile because the value is first interpreted as an int by the compiler 
+// This still does not compile because the value 
+// is first interpreted as an int by the compiler 
 // and it is out of range for an int. 
 long reptile = (long)192301398193810323;    // DOES NOT COMPILE
 
@@ -137,7 +359,8 @@ long coyote = (wolf = 3);
 System.out.println(wolf);   // 3
 System.out.println(coyote); // 3
 
-// As an example, healthy is assigned true value (return value of assignment is true here)
+// As an example, healthy is assigned true value 
+// return value of assignment is true here
 boolean healthy = false;
 if(healthy = true) {
     System.out.print("Good!");

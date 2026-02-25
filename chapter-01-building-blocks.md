@@ -257,6 +257,17 @@ Everything to the left of it is incidental whitespace, and everything to the rig
 
 Java removes whitespace needed only for code readability (Incidental whitespace), but keeps whitespace needed for content meaning (Essential whitespace).
 
+For example, for the following text blocks, the indentation of the Java code is removed (incidental whitespace). The internal indentation of the JSON content is preserved (essential whitespace).
+
+```java
+String person = """
+        {
+            "name": "John Doe",
+            "role": "Java Developer"
+        }
+        """;
+```
+
 **Variables and Identifiers**
 
 A variable is a name for a piece of memory that stores data.
@@ -267,22 +278,19 @@ A semicolon (`;`) separates statements in Java.
 
 **Local, Instance, and Class variables**
 
-Local variables (inside methods) do not have a default value and must be initialized before use. 
+**Local variables** (inside methods) do not have a default value and must be initialized before use. 
 
 Furthermore, the compiler will report an error if we try to read an uninitialized local variable value. 
 
 We need to remember, the compiler is concerned only if we try to use uninitialized local variables; it doesn’t mind the ones we never use.
 
-<br>
 Variables that are not local variables are defined either as instance variables or as class variables.
-<br>
 
-An instance variable, often called a field, is a value defined within a specific instance of an object. Two instances could have the same value for an instance variable, but changing the value for one does not modify the other.
+An **instance variable**, often called a field, is a value defined within a specific instance of an object. Two instances could have the same value for an instance variable, but changing the value for one does not modify the other.
 
 Let’s say we have a `Person` class with an instance variable `name` of type `String`. Each instance of the class would have its own value for `name`, such as `Elysia` or `Sarah`. Chaning one name variable value for an instance would not affect the other.
-<br>
 
-On the other hand, a class variable is one that is defined on the class level and shared among all instances of the class.
+On the other hand, a **class variable** is one that is defined on the class level and shared among all instances of the class.
 
 It can even be publicly accessible to classes outside the class and doesn’t require an instance to use.
 
@@ -294,7 +302,7 @@ The compiler doesn’t know what value to use and so wants the simplest value it
 
 We have the option of using the keyword `var` instead of the type when declaring local variables under certain conditions.
 
-The formal name of this feature is local variable type inference. We can use this feature only for local variables. 
+The formal name of this feature is **local variable type inference**. We can use this feature only for local variables. 
 
 In Java, `var` is still a specific type defined at compile time (and resolved at compile time). It does not change type at runtime.
 
@@ -327,6 +335,14 @@ Identifying blocks and variable scope needs to be second nature for the exam.
 
 - Rule for of instance variables is easier: they are available as soon as they are defined and last for the entire lifetime of the object itself. 
 - The rule for class, aka static, variables is even easier: they go into scope when declared like the other variable types. However, they stay in scope for the entire life of the program.
+
+**Order of Evaluation / Execution Order**
+
+That is a classic "Java lifecycle" question. It’s the difference between preparing the blueprint (the Class) and actually building the house (the Object).
+
+In Java, the JVM follows a strict hierarchy to ensure that data is available before you try to use it.
+
+**Order:** static variable > static block > main starts > instance variable > instance initializer > constructor
 
 **Rules on scope:**
 
