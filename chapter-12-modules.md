@@ -50,3 +50,144 @@ The contents of `module-info.java` file are the module declaration.
 Module declaration rules in comparison with java class declaration:
 
 - The module-info.java file must be in the root directory of your module. Regular Java classes should be in packages.
+
+Here is your note refined in the same style, with repetition removed and arranged more cleanly.
+
+**Compiling First Module**
+
+```bash
+javac --module-path mods -d {folderName} path/to/sourcefiles/Main.java path/to/modulefile/module-info.java
+```
+
+`--module-path` specifies where Java should look for required named modules.
+
+It is not where the current source files are. It is where Java looks for compiled modules or modular JARs that the current module depends on.
+
+We can think of `--module-path` as serving a similar purpose to `classpath` in a modular program.
+
+`--module-path mods` means:
+
+> Look inside the `mods` directory for required modules.
+
+`-d` specifies the destination directory for compiled `.class` files.
+
+`-d {folderName}` tells `javac` where to place the compiled output.
+
+For modular compilation, this is usually the parent output folder, not the module folder itself.
+
+The files at the end of the command are the `.java` source files to compile, including `module-info.java`.
+
+`--module-path` and `-p` are equivalent.
+
+**Why `--module-path` matters**
+
+In non-modular Java, dependencies are usually resolved with `classpath`.
+
+In modular Java, dependencies are usually resolved with `--module-path`.
+
+So this is the modular equivalent of saying:
+
+> Here is where the modules I depend on are stored.
+
+Subtle point:
+
+* `classpath` works with classes and JARs in the traditional non-modular way
+* `module-path` works with named modules
+
+So, it is not just a renaming. It is part of the module system.
+
+**What about `classpath`?**
+
+The `classpath` option still exists and has three forms:
+
+* `-cp`
+* `--class-path`
+* `-classpath`
+
+These are commonly used for non-modular programs.
+
+**Running First Module**
+
+```bash
+java --module-path <module-location> --module <module-name>/<main-class>
+```
+
+This runs the specified main class from the specified module.
+
+`--module-path` tells Java where to find compiled modules or modular JARs.
+
+`--module` tells Java which module to run and which main class inside that module to launch.
+
+Syntax:
+
+```bash
+<module-name>/<main-class>
+```
+
+`--module` and `-m` are equivalent.
+`--module-path` and `-p` are equivalent.
+
+Example:
+
+```bash
+java --module-path mods --module book.module/com.sybex.OCP
+```
+
+This means:
+
+> Run `com.sybex.OCP` from module `book.module`.
+
+The main class must contain:
+
+```java
+public static void main(String[] args)
+```
+
+**Packaging First Module**
+
+A module is usually packaged into a JAR so it can be used from outside the folder where it was compiled.
+
+Before packaging, create the `mods` directory.
+
+```bash
+jar -cvf mods/zoo.animal.feeding.jar -C feeding .
+```
+
+`jar` is used to package compiled files into a JAR.
+
+`-c` means create a new JAR file.
+
+`-v` means verbose output.
+
+`-f` means the next argument is the JAR file name.
+
+`mods/zoo.animal.feeding.jar` is the name and location of the generated JAR file.
+
+`-C feeding .` means:
+
+> Change to the `feeding` directory, then package everything inside it.
+
+There is nothing module-specific in the `jar` command itself. It simply packages the compiled contents of the module into a JAR file.
+
+This JAR represents how the module is exposed to other code that wants to use it.
+
+**Running the packaged module**
+
+```bash
+java -p mods -m zoo.animal.feeding/zoo.animal.feeding.Task
+```
+
+This runs the main class `zoo.animal.feeding.Task` from the module `zoo.animal.feeding`.
+
+Here, `mods` is now the module path containing the packaged module JAR.
+
+This command looks almost the same as running loose compiled classes. The difference is what the module path points to:
+
+* earlier, it pointed to the directory containing compiled module classes
+* now, it points to the directory containing the packaged module JAR
+
+Since the module path is used, Java can run the module directly from the modular JAR.
+
+**Note**
+
+A modular JAR is just a regular JAR that contains `module-info.class`.
