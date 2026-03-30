@@ -51,8 +51,8 @@ This chapter covers how Java programs interact with data outside the JVM:
 - querying file metadata
 
 For the exam, this topic spans two related but distinct APIs:
-- classic `java.io` — the original I/O API
-- `java.nio.file` (NIO.2) — the modern file system API added in Java 7
+- classic `java.io` i.e. the original I/O API
+- `java.nio.file` (NIO.2) i.e. the modern file system API added in Java 7
 
 ### Exam mindset
 
@@ -346,7 +346,7 @@ System.out.println(rel.getParent());  // land/hippo
 - `getNameCount()` does not count the root
 - `getRoot()` returns `null` for relative paths
 - `getParent()` returns `null` for root or a single-segment relative path like `Path.of("file.txt")`
-- `toString()` is the only method that returns `String` — everything else returns `Path`
+- `toString()` is the only method that returns `String`, everything else returns `Path`
 - path element indexing starts at 0 and does not include root
 
 ### Iterating over elements
@@ -366,7 +366,7 @@ for (Path element : Path.of("/land/hippo/harry")) {
 
 This is the highest-value exam section for `Path`.
 
-### 9.1 `resolve()` — path concatenation
+### 9.1 `resolve()` for path concatenation
 
 Think of `resolve` as appending one path to another.
 
@@ -401,7 +401,7 @@ Rules:
 
 ---
 
-### 9.2 `relativize()` — compute relative route
+### 9.2 `relativize()` to compute relative route
 
 `relativize()` answers: "how do I get from this path to that path?"
 
@@ -435,7 +435,7 @@ On Windows, both absolute paths must share the same drive letter.
 
 ---
 
-### 9.3 `normalize()` — clean up redundant segments
+### 9.3 `normalize()` to clean up redundant segments
 
 `normalize()` removes `.` and reducible `..` entries.
 
@@ -523,7 +523,7 @@ Rules:
 
 ### `startsWith(Path)` and `endsWith(Path)`
 
-Path-aware prefix and suffix checks — not plain string comparison.
+Path-aware prefix and suffix checks, not plain string comparison.
 
 ```java
 Path path = Path.of("/zoo/animals/bear");
@@ -534,7 +534,7 @@ System.out.println(path.startsWith("/z"));              // false (not a full ele
 
 System.out.println(path.endsWith("bear"));              // true
 System.out.println(path.endsWith("animals/bear"));      // true
-System.out.println(path.endsWith("s/bear"));            // false — "s" is not a path element
+System.out.println(path.endsWith("s/bear"));            // false as "s" is not a path element
 ```
 
 `endsWith("s/bear")` is `false` because `"s"` is not a complete path element. `"animals"` is.
@@ -575,7 +575,7 @@ Files.createDirectories(path); // creates directory and any missing parents
 ```
 
 `createDirectory()` throws `IOException` if the parent does not exist.
-`createDirectories()` is idempotent — no error if the directory already exists.
+`createDirectories()` is idempotent, no error if the directory already exists.
 
 ### Temporary files and directories
 
