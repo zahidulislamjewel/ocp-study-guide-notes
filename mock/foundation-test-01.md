@@ -1,38 +1,3 @@
-## Performance Report
-
-Question: 50
-Correct: 30 
-Status: Failed (60%)
-Time Taken: 58:11
-Start Time: 23 March 26 00:30
-
-## Weakness
-
-1. Handling values
-   - Manipulating text (2/5)
-   - Using primitives and wrapper classess text (0/1)
-2. Java OOA
-   - Using fields and methods (0/2)
-   - Nested classes (1/2)
-   - Object initialization (1/2)
-   - Interfaces (1/2)
-   - Overriding/Polymorphism (2/3)
-3. Controlling Program Flow
-   - Loops (1/2)
-   - if/else, switch (1/2)
-4. Arrays and Collections
-   - Collection API (5/8)
-   - Arrays (2/3)
-7. Java I/O API
-   - Character and Binary Streams (0/1)
-8. Modules 
-   - Services in a Modular Application (0/1)
-   - Migration to Modular Application (1/2)  
-10. Streams and Lambda
-    - Builtin Functional Interfaces (0/1)  
-
----
-
 ## Question Review Notes
 
 ### Question 2 
