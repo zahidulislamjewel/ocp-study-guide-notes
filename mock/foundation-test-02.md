@@ -552,16 +552,6 @@ loss of precision while using float and double casting from int.
 
 <Come Back for the Rules; Explanation>
 
-### Question 
-
-### Question 
-
-### Question 
-
-### Question 
-
-### Question 
-
 ### Question 50
 
 An anonymous class can be declared in a static method. Example,
