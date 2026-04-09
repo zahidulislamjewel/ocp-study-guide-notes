@@ -59,28 +59,28 @@ A module is a **named, self-describing collection of packages** with a special f
 
 ---
 
-## 2. Module Directives (All Keywords)
+## 2. Module Directives (Keywords)
 
 The `module-info.java` file must be placed at the **root directory** of the module. It contains the **module declaration**.
 
-### Complete Template (All Directives)
+### All Directives
 
 ```java
 module my.module {
-    // --- Dependencies ---
+    // Dependencies
     requires other.module;                         // normal dependency
     requires transitive another.module;            // re-export dependency
-    requires static optional.module;              // compile-time only
+    requires static optional.module;               // compile-time only
 
-    // --- Visibility ---
+    // Visibility
     exports com.example.api;                       // open to all modules
     exports com.example.internal to friend.module; // open to specific module only
 
-    // --- Reflection ---
+    // Reflection
     opens com.example.model;                       // all modules can reflect
     opens com.example.entity to framework.module;  // only framework can reflect
 
-    // --- Services ---
+    // Services
     uses com.example.spi.Service;                  // I consume this service
     provides com.example.spi.Service
         with com.example.impl.ServiceImpl;         // I provide this implementation
@@ -102,7 +102,7 @@ module com.shop.app {
 - Code inside `com.shop.app` can use public types from packages that `com.shop.utils` exports
 - This is the modular equivalent of adding a library dependency
 
-> **Exam Tip:** `requires` only works with **named** and **automatic** modules. You cannot `requires` an unnamed module (classpath code).
+> **Note:** `requires` only works with **named** and **automatic** modules. You cannot `requires` an unnamed module (classpath code).
 
 ---
 
@@ -119,6 +119,34 @@ module com.library {
 module com.app {
     requires com.library;
     // com.app automatically reads com.common too no need to declare it
+}
+```
+
+Example from the book,
+
+```java
+module zoo.animal.feeding {   
+    exports zoo.animal.feeding;
+}
+
+module zoo.animal.care {   
+    exports zoo.animal.care.medical;   
+    requires transitive zoo.animal.feeding;
+}
+
+module zoo.animal.talks {
+    exports zoo.animal.talks.content to zoo.staff;
+    exports zoo.animal.talks.media;
+    exports zoo.animal.talks.schedule;
+    // no longer needed requires zoo.animal.feeding;   
+    // no longer needed requires zoo.animal.care;   
+    requires transitive zoo.animal.care;
+}
+
+module zoo.staff {   
+    // no longer needed requires zoo.animal.feeding;   
+    // no longer needed requires zoo.animal.care;   
+    requires zoo.animal.talks;
 }
 ```
 
@@ -140,7 +168,7 @@ public class LibraryService {
 }
 ```
 
-> **Exam Tip:** Do NOT use `requires transitive` indiscriminately only when the dependency leaks into your public API.
+> **Note:** `requires transitive` should not be used indiscriminately only when the dependency leaks into public API.
 
 ---
 
@@ -171,10 +199,10 @@ module com.shop.utils {
 }
 ```
 
-> **CRITICAL EXAM TRAP:** A class being `public` is NOT enough. The **package** must also be exported. Without `exports`, even `public` classes are inaccessible to other modules.
+> **Note:** A class being `public` is not enough. The **package** must also be exported. Without `exports`, even `public` classes are inaccessible to other modules.
 
 ```java
-// This public class is STILL inaccessible outside the module
+// This public class is still inaccessible outside the module
 // if the package is not exported:
 module com.example {
     // no exports statement
@@ -206,7 +234,7 @@ Use when you want one package exposed to a trusted module, but not to the world.
 
 ### `opens`
 
-**Meaning:** Allow **runtime reflective access** to a package, but NOT normal compile-time access.
+**Meaning:** Allow **runtime reflective access** to a package, but not normal compile-time access.
 
 ```java
 module com.myapp {
@@ -285,7 +313,58 @@ module com.payment.paypal {
 }
 ```
 
-> **Exam Tip:** The **provider's implementation class does NOT need to be in an exported package**. The implementation can remain hidden ServiceLoader still discovers it through the `provides` declaration.
+> **Exam Tip:** The **provider's implementation class does not need to be in an exported package**. The implementation can remain hidden ServiceLoader still discovers it through the `provides` declaration.
+
+---
+
+### ServiceLoader Pattern
+
+**Service**
+
+A service is composed of an interface, any classes the interface references, and a way of looking up implementations of the interface. The implementations are not part of the service.
+
+**Service Provider Interface (SPI)**
+
+Service Provider Interface is a java interface which specifies what behavior our service will have
+
+A service provider “interface” can be an abstract class rather than an actual interface.
+
+```java
+public interface Tour {}
+```
+
+**Service Locator**
+
+A service locator can find any classes that implement a service provider interface.
+
+Java provides a `ServiceLoader` class to help with this task. You pass the service provider interface type to its load() method, and Java will return any implementation services it can find. 
+
+```java
+ServiceLoader<Tour> loader = ServiceLoader.load(Tour.class);
+```
+
+The ServiceLoader call is relatively expensive. If you are writing a real application, it is best to cache the result.
+
+**Service Consumer**
+
+A consumer (or client) refers to a module that obtains and uses a service. Once the consumer has acquired a service via the service locator, it is able to invoke the methods provided by the service provider interface.
+
+```java
+Tour tour = TourFinder.findSingleTour();
+
+List<Tour> tours = TourFinder.findAllTours();
+```
+
+**Service Provider (Implementation)**
+
+A service provider is the implementation of a service provider interface. As we said earlier, at runtime it is possible to have multiple implementation classes or modules.
+
+```java
+public class TourImpl implements Tour {}
+```
+
+The module declaration requires the module containing the interface as a dependency. We don’t export the package that implements the interface since we don’t want callers referring to it directly. 
+Instead, we use the provides directive. This allows us to specify that we provide an implementation of the interface with a specific implementation class.
 
 ---
 
