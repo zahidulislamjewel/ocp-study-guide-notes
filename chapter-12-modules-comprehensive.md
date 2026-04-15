@@ -273,7 +273,7 @@ module com.myapp {
 
 ### `open module` (Open Module Declaration)
 
-**Meaning:** ALL packages in the module are open for reflection to everyone.
+**Meaning:** All packages in the module are open for reflection to everyone.
 
 ```java
 open module com.myapp {
@@ -317,57 +317,6 @@ module com.payment.paypal {
 
 ---
 
-### ServiceLoader Pattern
-
-**Service**
-
-A service is composed of an interface, any classes the interface references, and a way of looking up implementations of the interface. The implementations are not part of the service.
-
-**Service Provider Interface (SPI)**
-
-Service Provider Interface is a java interface which specifies what behavior our service will have
-
-A service provider “interface” can be an abstract class rather than an actual interface.
-
-```java
-public interface Tour {}
-```
-
-**Service Locator**
-
-A service locator can find any classes that implement a service provider interface.
-
-Java provides a `ServiceLoader` class to help with this task. You pass the service provider interface type to its load() method, and Java will return any implementation services it can find. 
-
-```java
-ServiceLoader<Tour> loader = ServiceLoader.load(Tour.class);
-```
-
-The ServiceLoader call is relatively expensive. If you are writing a real application, it is best to cache the result.
-
-**Service Consumer**
-
-A consumer (or client) refers to a module that obtains and uses a service. Once the consumer has acquired a service via the service locator, it is able to invoke the methods provided by the service provider interface.
-
-```java
-Tour tour = TourFinder.findSingleTour();
-
-List<Tour> tours = TourFinder.findAllTours();
-```
-
-**Service Provider (Implementation)**
-
-A service provider is the implementation of a service provider interface. As we said earlier, at runtime it is possible to have multiple implementation classes or modules.
-
-```java
-public class TourImpl implements Tour {}
-```
-
-The module declaration requires the module containing the interface as a dependency. We don’t export the package that implements the interface since we don’t want callers referring to it directly. 
-Instead, we use the provides directive. This allows us to specify that we provide an implementation of the interface with a specific implementation class.
-
----
-
 ## 3. Three Module Types
 
 ### Named Module
@@ -384,7 +333,7 @@ module app.main {
 - Has `module-info.java`, placed on the **module path**
 - Exports only what is explicitly declared
 - Can only read named and automatic modules
-- **CANNOT read the unnamed module (classpath)**
+- **Cannot read the unnamed module (classpath)**
 
 ### Automatic Module
 
@@ -393,7 +342,7 @@ A non-modular JAR placed on the **module path** (not classpath). Java automatica
 - No `module-info.java`, placed on the **module path**
 - Exports **all** its packages automatically (as if everything was exported)
 - Can be required by name
-- Can read named modules, other automatic modules, AND the unnamed module (classpath)
+- Can read named modules, other automatic modules, and the unnamed module (classpath)
 - Main purpose: a **bridge during migration** so named modules can depend on legacy JARs
 
 **Naming rules for automatic modules:**
@@ -411,7 +360,9 @@ Examples:
 Then a named module can do:
 ```java
 module app.main {
-    requires gson;   // gson-2.10.jar is on module path as automatic module
+    requires gson;
+    requires mysql.connector.java;
+    requires spring.core;
 }
 ```
 
@@ -420,25 +371,25 @@ module app.main {
 Everything on the **classpath** becomes part of the unnamed module.
 
 - No `module-info.java`; if one exists in the JAR, it is completely **ignored**
-- There is only ONE unnamed module all classpath content is in it
+- There is only one unnamed module all classpath content is in it
 - Can read all exported packages of named and automatic modules
-- **Named modules CANNOT read the unnamed module** there's no name to `requires`!
+- **Named modules cannot read the unnamed module** there's no name to `requires`!
 - Classpath code sees the module path, but not vice versa
 
 ```java
 // You cannot write this there's no way to require the unnamed module:
 module app.main {
-    requires unnamed;  // ILLEGAL - doesn't exist as a name
+    requires unnamed;  // Illegal - doesn't exist as a name
 }
 ```
 
 ### The Critical Access Rules
 
-- **Named module** can read: named modules + automatic modules (NOT unnamed)
+- **Named module** can read: named modules + automatic modules (Not unnamed)
 - **Automatic module** can read: named modules + automatic modules + unnamed module (classpath)
 - **Unnamed module** can read: exported packages of named + automatic modules + classpath
 
-> **Exam Tip:** The most tested rule: **Named modules cannot read the unnamed module.** If a named module needs a legacy JAR, put that JAR on the **module path** (making it automatic), NOT the classpath.
+> **Exam Tip:** The most tested rule: **Named modules cannot read the unnamed module.** If a named module needs a legacy JAR, put that JAR on the **module path** (making it automatic), not the classpath.
 
 ### Same Package in Two Places
 
@@ -490,7 +441,7 @@ javac -p mods -d feeding feeding/zoo/animal/feeding/*.java feeding/*.java
 
 Key flags:
 - `--module-path` / `-p` where to find **required** named/automatic modules (not where your source is)
-- `-d` **destination directory** for compiled `.class` files
+- `-d` **destination directory** for compiled `.class` files (not source directory)
 - `--class-path` / `-cp` / `-classpath` classpath for non-modular / pre-module style
 
 > **Key point:** `--module-path` is for modules you **depend on**. It is the modular equivalent of `--class-path`. The source files including `module-info.java` must be listed explicitly at the end of the command.
@@ -521,7 +472,7 @@ java -p mods -m zoo.animal.feeding/zoo.animal.feeding.Task
 
 Key flags:
 - `--module-path` / `-p` where to find modules
-- `--module` / `-m` specifies `<module-name>/<main-class>` to run
+- `--module` / `-m` specifies `<module-name>/<main-class>` to run. It specifies the module to run, often together with the main class if needed
 
 The main class must have `public static void main(String[] args)`.
 
@@ -530,19 +481,24 @@ The main class must have `public static void main(String[] args)`.
 Describing a module (shows its directives):
 ```bash
 java -p mods -d zoo.animal.feeding
-java -p mods --describe-module zoo.animal.feeding
+
+# Prints information about that module
+java -p mods --describe-module zoo.animal.feeding 
 jar -f mods/zoo.animal.feeding.jar -d
 jar --file mods/zoo.animal.feeding.jar --describe-module
 ```
 
 Listing all available modules:
 ```bash
+# Lists all observable modules available to the runtime
 java --list-modules              # JDK modules only
 java -p mods --list-modules      # JDK + your modules
 ```
 
 Showing module resolution at startup:
 ```bash
+# Runs the module and also shows how module resolution happened at startup
+# Run this module, and also show me how Java figured out the dependency graph
 java --show-module-resolution -p feeding -m zoo.animal.feeding/zoo.animal.feeding.Task
 ```
 
